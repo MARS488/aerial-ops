@@ -1,0 +1,519 @@
+<title>CivilitySync — Demo Prototype</title>
+<style>
+  :root{
+    --paper:#F2EFE3;
+    --paper-raised:#FAF8F0;
+    --ink:#1F2A22;
+    --ink-soft:#4B5449;
+    --sky:#2E4A63;
+    --sky-soft:#B9C9D6;
+    --clay:#B14E2E;
+    --clay-soft:#F0D9CC;
+    --sage:#7C8570;
+    --line: rgba(31,42,34,0.16);
+    --good:#2E6B3E;
+    --warn:#9A6B1E;
+    --sev-none:#7C8570;
+    --sev-minor:#9A6B1E;
+    --sev-mod:#B14E2E;
+    --sev-severe:#8C2A1E;
+    --shadow: 0 1px 2px rgba(31,42,34,0.06), 0 8px 24px -12px rgba(31,42,34,0.25);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#151C1B;
+      --paper-raised:#1D2624;
+      --ink:#ECE7D8;
+      --ink-soft:#B7BDAE;
+      --sky:#8FB0CB;
+      --sky-soft:#2C3D48;
+      --clay:#E08355;
+      --clay-soft:#3E2A22;
+      --sage:#9CA692;
+      --line: rgba(236,231,216,0.14);
+      --good:#7FBF8C;
+      --warn:#D6A54B;
+      --sev-none:#9CA692;
+      --sev-minor:#D6A54B;
+      --sev-mod:#E08355;
+      --sev-severe:#E0654F;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#151C1B;
+    --paper-raised:#1D2624;
+    --ink:#ECE7D8;
+    --ink-soft:#B7BDAE;
+    --sky:#8FB0CB;
+    --sky-soft:#2C3D48;
+    --clay:#E08355;
+    --clay-soft:#3E2A22;
+    --sage:#9CA692;
+    --line: rgba(236,231,216,0.14);
+    --good:#7FBF8C;
+    --warn:#D6A54B;
+    --sev-none:#9CA692;
+    --sev-minor:#D6A54B;
+    --sev-mod:#E08355;
+    --sev-severe:#E0654F;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.6);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .ui, button, input, select{
+    font-family: -apple-system, 'Avenir Next', 'Century Gothic', 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+  .mono{
+    font-family: 'SF Mono', 'Menlo', 'Consolas', 'Courier New', monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+
+  h1,h2,h3{ text-wrap: balance; margin:0; }
+
+  .demo-bar{
+    position:sticky; top:0; z-index:20;
+    background:var(--sky); color:var(--paper-raised);
+    padding:0.55rem 1.25rem;
+    display:flex; align-items:center; justify-content:center; gap:0.6rem;
+    font-size:0.78rem;
+  }
+  .demo-bar .tag{
+    font-family: 'SF Mono','Menlo',monospace;
+    font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase;
+    background:rgba(255,255,255,0.16); padding:0.15rem 0.5rem; border-radius:3px;
+  }
+
+  .wrap{ max-width:1180px; margin:0 auto; padding: 2.6rem 1.5rem 4rem; }
+
+  header.hero{
+    display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between;
+    gap:1rem 2rem;
+    padding-bottom:1.6rem; margin-bottom:2rem;
+    border-bottom:1px solid var(--line);
+  }
+  .wordmark{
+    font-size:2.1rem; font-weight:700; letter-spacing:-0.01em;
+  }
+  .wordmark .sync{ color:var(--sky); }
+  .tagline{
+    font-family: -apple-system,'Avenir Next','Segoe UI',sans-serif;
+    color:var(--ink-soft); font-size:0.95rem; max-width:34ch;
+  }
+  .hero-meta{
+    font-family:'SF Mono','Menlo',monospace; font-size:0.72rem; color:var(--ink-soft);
+    text-align:right; line-height:1.5; letter-spacing:0.02em;
+  }
+  .hero-meta span{ display:block; }
+  .hero-meta b{ color:var(--ink); }
+
+  .grid{
+    display:grid; grid-template-columns: minmax(280px,380px) 1fr;
+    gap: 1.75rem;
+    align-items:start;
+  }
+  @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
+
+  .panel{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:6px;
+    box-shadow:var(--shadow);
+  }
+  .panel-pad{ padding:1.5rem; }
+
+  .eyebrow{
+    font-family:'SF Mono','Menlo',monospace; text-transform:uppercase;
+    font-size:0.68rem; letter-spacing:0.1em; color:var(--sage);
+    margin:0 0 0.4rem;
+  }
+
+  fieldset{ border:none; margin:0 0 1.4rem; padding:0; }
+  label.field-label{
+    display:block; font-size:0.8rem; color:var(--ink-soft); margin-bottom:0.4rem;
+  }
+  input[type="text"]{
+    width:100%; padding:0.65rem 0.7rem;
+    background:var(--paper); color:var(--ink);
+    border:1px solid var(--line); border-radius:4px;
+    font-size:0.92rem;
+  }
+  input[type="text"]:focus, .opt:focus-visible, button:focus-visible{
+    outline:2px solid var(--sky); outline-offset:2px;
+  }
+
+  .opt-group{ display:flex; flex-direction:column; gap:0.6rem; }
+  .opt{
+    display:flex; align-items:flex-start; gap:0.7rem;
+    text-align:left; width:100%;
+    background:var(--paper); border:1px solid var(--line); border-radius:5px;
+    padding:0.75rem 0.85rem; cursor:pointer;
+    font-family: -apple-system,'Avenir Next','Segoe UI',sans-serif;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .opt:hover{ border-color:var(--sky-soft); }
+  .opt[aria-pressed="true"]{
+    border-color:var(--sky); background:var(--sky-soft);
+  }
+  .opt .dot{
+    width:0.85rem; height:0.85rem; border-radius:50%;
+    border:1.5px solid var(--sage); margin-top:0.2rem; flex:none;
+  }
+  .opt[aria-pressed="true"] .dot{ border-color:var(--sky); background:var(--sky); }
+  .opt-body{ flex:1; }
+  .opt-title{ display:flex; justify-content:space-between; gap:0.5rem; font-size:0.9rem; font-weight:600; }
+  .opt-price{ font-family:'SF Mono',monospace; color:var(--clay); }
+  .opt-desc{ font-size:0.78rem; color:var(--ink-soft); margin-top:0.2rem; line-height:1.4; }
+
+  .cta{
+    width:100%; margin-top:0.4rem;
+    background:var(--clay); color:var(--paper-raised);
+    border:none; border-radius:5px; padding:0.85rem 1rem;
+    font-size:0.88rem; font-weight:600; cursor:pointer;
+    font-family:-apple-system,'Avenir Next','Segoe UI',sans-serif;
+  }
+  .cta:hover{ filter:brightness(1.06); }
+  .cta-note{ font-size:0.72rem; color:var(--ink-soft); margin-top:0.55rem; text-align:center; }
+
+  /* Quote ticket */
+  .ticket{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:1.1rem 1.5rem; border-bottom:1px dashed var(--line);
+    font-family:'SF Mono',monospace;
+  }
+  .ticket .lbl{ font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--sage); }
+  .ticket .val{ font-size:0.95rem; color:var(--ink); }
+  .ticket .price{ font-size:1.6rem; color:var(--clay); font-weight:700; }
+
+  /* Report preview */
+  .report{ padding: 1.75rem 1.9rem 2rem; }
+  .report-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    border-bottom:3px solid var(--sky); padding-bottom:0.9rem; margin-bottom:1.3rem;
+    gap:1rem; flex-wrap:wrap;
+  }
+  .report-title{ font-size:1.3rem; color:var(--sky); }
+  .report-sub{ font-family:-apple-system,'Avenir Next',sans-serif; font-size:0.82rem; color:var(--ink-soft); margin-top:0.2rem; }
+  .report-fields{
+    font-family:'SF Mono',monospace; font-size:0.74rem; color:var(--ink-soft);
+    text-align:right; line-height:1.6;
+  }
+  .report-fields b{ color:var(--ink); }
+
+  .aerial-slot{
+    height:150px; border-radius:5px; margin-bottom:1.4rem;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 23px, var(--line) 23px, var(--line) 24px),
+      repeating-linear-gradient(90deg, transparent, transparent 23px, var(--line) 23px, var(--line) 24px),
+      var(--paper);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'SF Mono',monospace; font-size:0.72rem; color:var(--sage);
+    text-transform:uppercase; letter-spacing:0.08em;
+  }
+
+  .section-label{
+    font-family:'SF Mono',monospace; text-transform:uppercase; letter-spacing:0.08em;
+    font-size:0.72rem; color:var(--sky); margin: 1.5rem 0 0.7rem;
+    padding-bottom:0.35rem; border-bottom:1px solid var(--line);
+  }
+
+  .finding{ margin-bottom:0.9rem; }
+  .finding .what{ font-size:0.94rem; font-weight:700; }
+  .finding .why{
+    font-family:-apple-system,'Avenir Next',sans-serif;
+    font-size:0.85rem; color:var(--good); margin-top:0.15rem;
+  }
+
+  table.sev{ width:100%; border-collapse:collapse; font-family:-apple-system,'Avenir Next',sans-serif; font-size:0.83rem; }
+  table.sev th{
+    text-align:left; font-family:'SF Mono',monospace; font-size:0.68rem;
+    text-transform:uppercase; letter-spacing:0.06em; color:var(--sage);
+    padding:0.4rem 0.5rem; border-bottom:1px solid var(--line);
+  }
+  table.sev td{ padding:0.5rem; border-bottom:1px solid var(--line); vertical-align:top; }
+  .sev-pill{
+    display:inline-block; padding:0.12rem 0.5rem; border-radius:99px;
+    font-family:'SF Mono',monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em;
+    color:var(--paper-raised);
+  }
+  .sev-none{ background:var(--sev-none); }
+  .sev-minor{ background:var(--sev-minor); }
+  .sev-mod{ background:var(--sev-mod); }
+  .sev-severe{ background:var(--sev-severe); }
+
+  table.actions{ width:100%; border-collapse:collapse; font-family:-apple-system,'Avenir Next',sans-serif; font-size:0.83rem; margin-top:0.3rem;}
+  table.actions th{
+    text-align:left; font-family:'SF Mono',monospace; font-size:0.68rem;
+    text-transform:uppercase; letter-spacing:0.06em; padding:0.4rem 0.6rem;
+  }
+  table.actions th.now{ color:var(--clay); }
+  table.actions th.soon{ color:var(--warn); }
+  table.actions th.later{ color:var(--sage); }
+  table.actions td{ padding:0.5rem 0.6rem; border-top:1px solid var(--line); vertical-align:top; }
+
+  .hook{
+    margin-top:1.4rem; padding:0.85rem 1rem; border-radius:5px;
+    background:var(--clay-soft); border:1px solid var(--line);
+    font-family:-apple-system,'Avenir Next',sans-serif; font-size:0.84rem;
+  }
+
+  .disclaimer{
+    margin-top:1.6rem; padding-top:1rem; border-top:1px solid var(--line);
+    font-family:-apple-system,'Avenir Next',sans-serif;
+    font-size:0.74rem; color:var(--ink-soft); line-height:1.55;
+  }
+
+  .demo-note{
+    margin-top:1.25rem; padding:0.8rem 1rem; border-radius:5px;
+    background:var(--sky-soft); border:1px solid var(--line);
+    font-family:-apple-system,'Avenir Next',sans-serif; font-size:0.8rem; color:var(--ink);
+  }
+
+  footer{
+    max-width:1180px; margin:2.5rem auto 0; padding:1.25rem 1.5rem 0;
+    border-top:1px solid var(--line);
+    font-family:-apple-system,'Avenir Next',sans-serif; font-size:0.78rem; color:var(--ink-soft);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    .report, .ticket{ transition: opacity .18s ease; }
+  }
+</style>
+
+<div class="demo-bar ui">
+  <span class="tag">Demo</span>
+  <span>Prototype only — no submission is sent, nothing is booked, no real data leaves this page. <strong>⚠️ The prices below are superseded — do not quote them to anyone.</strong> They are the <strong>CivilitySync package card</strong> (Quick Look / Full Assessment / Seasonal) as locked 2026-09-12. The drone price list has been re-locked <strong>three times in eight weeks</strong> since — a per-item menu on 2026-10-03, then a restructured <strong>v3 lock on 2026-10-22</strong> (packages and tiers, a $125 job minimum, per-mile travel past 25 miles) — and <a href="https://github.com/MARS488/girl-talk/pull/5">PR #5</a> dropped the package card from the public page on 2026-10-16. <strong>Do not copy a price out of this page, and do not copy one in.</strong> Pull the current card from <code>/LLC Business/LOCKED-DECISIONS-&lt;newest date&gt;.md</code> or the live Pages card in the same session you quote it, and name which brand's card it is. Whether this package card is still live for CivilitySync app intake at all is <strong>Marcus's call and has not been made</strong> — so the numbers below are left in place, dated, as a UX prototype rather than swapped for a card that belongs to a different product line. A real build must read prices from the named card, not hardcode them — see BASE44_APP_SPEC.md.</span>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <div class="wordmark">Civility<span class="sync">Sync</span></div>
+      <p class="tagline">Aerial property documentation &amp; coordination — Valdosta / Lowndes County, GA</p>
+    </div>
+    <div class="hero-meta">
+      <span>Operator: <b>Marcus Jay Herring LLC</b></span>
+      <span>Pilot: <b>Part&nbsp;107 #5051412</b></span>
+      <span>Status: <b>pre-launch — insurance pending</b></span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: intake -->
+    <div class="panel panel-pad ui">
+      <p class="eyebrow">Step 1 — the job</p>
+
+      <fieldset>
+        <label class="field-label" for="addr">Property address</label>
+        <input type="text" id="addr" placeholder="e.g. 412 Oak St, Valdosta, GA" value="412 Oak St, Valdosta, GA">
+      </fieldset>
+
+      <fieldset>
+        <label class="field-label">What's this for?</label>
+        <div class="opt-group" id="jobtype">
+          <button class="opt" type="button" data-jobtype="assessment" aria-pressed="true">
+            <span class="dot"></span>
+            <span class="opt-body">
+              <span class="opt-title">General assessment</span>
+              <span class="opt-desc">Sale, listing, or a general look at the property.</span>
+            </span>
+          </button>
+          <button class="opt" type="button" data-jobtype="storm" aria-pressed="false">
+            <span class="dot"></span>
+            <span class="opt-body">
+              <span class="opt-title">Storm / damage documentation</span>
+              <span class="opt-desc">For an insurance claim or post-storm record.</span>
+            </span>
+          </button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <label class="field-label">Package</label>
+        <div class="opt-group" id="package">
+          <button class="opt" type="button" data-pkg="quick" data-price="175" aria-pressed="false">
+            <span class="dot"></span>
+            <span class="opt-body">
+              <span class="opt-title">Quick Look <span class="opt-price">$175</span></span>
+              <span class="opt-desc">Aerial imagery + a short "what I'd flag" summary. 24–48 hrs.</span>
+            </span>
+          </button>
+          <button class="opt" type="button" data-pkg="full" data-price="325" aria-pressed="true">
+            <span class="dot"></span>
+            <span class="opt-body">
+              <span class="opt-title">Full Assessment <span class="opt-price">$325</span></span>
+              <span class="opt-desc">Annotated findings, action table, PDF report. ~48 hrs. (Most popular)</span>
+            </span>
+          </button>
+          <button class="opt" type="button" data-pkg="seasonal" data-price="299" aria-pressed="false">
+            <span class="dot"></span>
+            <span class="opt-body">
+              <span class="opt-title">Seasonal Plan <span class="opt-price">$299<span style="font-size:0.72rem;color:var(--ink-soft);">/visit</span></span></span>
+              <span class="opt-desc">Full Assessment, repeated spring &amp; fall — catches issues while they're small. Billed per visit.</span>
+            </span>
+          </button>
+        </div>
+      </fieldset>
+
+      <button class="cta" id="go">See my quote &amp; sample report</button>
+      <p class="cta-note">This demo does not send, save, or book anything.</p>
+    </div>
+
+    <!-- RIGHT: live quote + report preview -->
+    <div class="panel">
+      <div class="ticket ui">
+        <div>
+          <div class="lbl">Address</div>
+          <div class="val" id="t-addr">412 Oak St, Valdosta, GA</div>
+        </div>
+        <div>
+          <div class="lbl">Turnaround</div>
+          <div class="val" id="t-turn">24–48 hrs</div>
+        </div>
+        <div style="text-align:right">
+          <div class="lbl">Estimate</div>
+          <div class="price" id="t-price">$325</div>
+        </div>
+      </div>
+
+      <div class="report" id="report">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <p class="demo-note ui">
+    In the live version — once general liability and drone coverage are bound — submitting this form would notify Marcus directly, log the lead, and generate this exact report automatically for review before anything goes to a client. Right now it exists so the client experience can be tested and shown before that switch is flipped.
+  </p>
+
+  <footer>
+    <span>CivilitySync — a documentation &amp; coordination service, not a certified survey, engineering, or adjusting practice.</span>
+    <span class="mono">v0 · prototype</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var state = { jobtype: 'assessment', pkg: 'full', price: 325, addr: document.getElementById('addr').value };
+
+  var PKG_TURN = { quick: '24–48 hrs', full: '~48 hrs', seasonal: '~48 hrs, spring + fall' };
+
+  function bindGroup(id, key, cb){
+    var group = document.getElementById(id);
+    group.querySelectorAll('.opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        group.querySelectorAll('.opt').forEach(function(b){ b.setAttribute('aria-pressed','false'); });
+        btn.setAttribute('aria-pressed','true');
+        cb(btn);
+        render();
+      });
+    });
+  }
+
+  bindGroup('jobtype', 'jobtype', function(btn){ state.jobtype = btn.getAttribute('data-jobtype'); });
+  bindGroup('package', 'pkg', function(btn){
+    state.pkg = btn.getAttribute('data-pkg');
+    state.price = btn.getAttribute('data-price');
+  });
+
+  document.getElementById('addr').addEventListener('input', function(e){
+    state.addr = e.target.value || '[address not entered]';
+    render();
+  });
+
+  document.getElementById('go').addEventListener('click', function(){
+    document.getElementById('report').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; });
+  }
+
+  function today(){
+    var d = new Date();
+    return d.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+  }
+
+  function renderAssessment(){
+    return ''+
+    '<div class="report-head">'+
+      '<div>'+
+        '<div class="report-title">Property Aerial Assessment</div>'+
+        '<div class="report-sub">Prepared by CivilitySync — Marcus Jay Herring, FAA Part 107 #5051412</div>'+
+      '</div>'+
+      '<div class="report-fields">'+
+        '<span>Property: <b>'+escapeHtml(state.addr)+'</b></span>'+
+        '<span>Date: <b>'+today()+'</b></span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="aerial-slot ui">aerial overview — image slot</div>'+
+    '<div class="section-label">Key observations (sample)</div>'+
+    '<div class="finding"><div class="what">1. South roof slope — moderate granule loss near the ridge.</div><div class="why">Why it matters: worth a closer roofer look before it becomes a leak.</div></div>'+
+    '<div class="finding"><div class="what">2. Gutter on the east side is sagging away from the fascia.</div><div class="why">Why it matters: water is likely pooling near the foundation on that side.</div></div>'+
+    '<div class="finding"><div class="what">3. Tree canopy overhangs the northwest corner of the roofline.</div><div class="why">Why it matters: limb drop risk in wind; a trim would reduce it.</div></div>'+
+    '<div class="section-label">Recommended actions</div>'+
+    '<table class="actions ui"><thead><tr><th class="now">Now</th><th class="soon">Soon</th><th class="later">Later</th></tr></thead>'+
+    '<tbody><tr>'+
+    '<td>Have a roofer look at the ridge line.</td>'+
+    '<td>Reset the east gutter line.</td>'+
+    '<td>Trim the NW canopy before storm season.</td>'+
+    '</tr></tbody></table>'+
+    '<div class="hook ui">Want this property watched over time? A seasonal flight catches roof and drainage issues while they\'re still small.</div>'+
+    '<div class="disclaimer">This assessment provides aerial imagery and general observations for planning purposes only. It is NOT a certified land survey, engineering report, or legal determination. For certified or regulated work, a licensed professional will be engaged.</div>';
+  }
+
+  function renderStorm(){
+    return ''+
+    '<div class="report-head">'+
+      '<div>'+
+        '<div class="report-title">Storm Damage Documentation</div>'+
+        '<div class="report-sub">Independent aerial documentation to support the property owner\'s insurance claim</div>'+
+      '</div>'+
+      '<div class="report-fields">'+
+        '<span>Property: <b>'+escapeHtml(state.addr)+'</b></span>'+
+        '<span>Documented: <b>'+today()+'</b></span>'+
+        '<span>Carrier / Claim #: <b>[on file]</b></span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="aerial-slot ui">aerial overview — image slot</div>'+
+    '<div class="section-label">Damage summary by area (sample)</div>'+
+    '<table class="sev ui"><thead><tr><th>Area</th><th>Severity</th><th>Observation</th></tr></thead>'+
+    '<tbody>'+
+    '<tr><td>Roof</td><td><span class="sev-pill sev-mod">Moderate</span></td><td>~40% shingle loss, north slope, decking exposed.</td></tr>'+
+    '<tr><td>Structure / walls</td><td><span class="sev-pill sev-none">None</span></td><td>No visible damage from the air.</td></tr>'+
+    '<tr><td>Exterior / windows</td><td><span class="sev-pill sev-minor">Minor</span></td><td>One cracked pane, east side.</td></tr>'+
+    '<tr><td>Grounds / trees</td><td><span class="sev-pill sev-severe">Severe</span></td><td>Large limb down across the driveway.</td></tr>'+
+    '</tbody></table>'+
+    '<div class="section-label">Documented findings</div>'+
+    '<div class="finding"><div class="what">North roof slope — significant shingle loss.</div><div class="why" style="color:var(--ink-soft)">Photo/scan ref: 1–3 · Notes: wind-driven; safe to document from air, do not walk.</div></div>'+
+    '<div class="section-label">Recommended next steps</div>'+
+    '<table class="actions ui"><thead><tr><th class="now">Now</th><th class="soon">Soon</th><th class="later">Later</th></tr></thead>'+
+    '<tbody><tr>'+
+    '<td>Tarp the exposed decking.</td>'+
+    '<td>Submit this documentation to the carrier.</td>'+
+    '<td>Get a structural engineer\'s scope for rebuild.</td>'+
+    '</tr></tbody></table>'+
+    '<div class="hook ui">Build-back-better note: ask the carrier about Increased Cost of Compliance (ICC) coverage for rebuilding to current code.</div>'+
+    '<div class="disclaimer">This report is independent aerial damage documentation for the property owner\'s use. It is NOT a certified insurance estimate, a public-adjusting service, an engineering assessment, or a legal determination. Repair scope, structural findings, and claim decisions must come from the appropriate licensed professionals and the insurer.</div>';
+  }
+
+  function render(){
+    document.getElementById('t-addr').textContent = state.addr || '[address not entered]';
+    document.getElementById('t-turn').textContent = PKG_TURN[state.pkg];
+    document.getElementById('t-price').textContent = '$' + state.price;
+    document.getElementById('report').innerHTML = state.jobtype === 'storm' ? renderStorm() : renderAssessment();
+  }
+
+  render();
+})();
+</script>
