@@ -30,20 +30,20 @@
     nav a{color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:500;margin-left:1.4rem;transition:color .2s}
     nav a:first-child{margin-left:0}
     nav a:hover{color:#fff}
-    .hero{position:relative;overflow:hidden;padding:7rem 0 6rem;background:radial-gradient(55rem 28rem at 85% -10%,rgba(92,184,255,.20),transparent 60%),radial-gradient(40rem 22rem at -10% 110%,rgba(217,180,106,.08),transparent 60%),linear-gradient(180deg,var(--navy2),var(--navy))}
+    .hero{position:relative;overflow:hidden;padding:4.25rem 0 3.5rem;background:radial-gradient(55rem 28rem at 85% -10%,rgba(92,184,255,.20),transparent 60%),radial-gradient(40rem 22rem at -10% 110%,rgba(217,180,106,.08),transparent 60%),linear-gradient(180deg,var(--navy2),var(--navy))}
     .hero:after{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse at 70% 30%,#000 10%,transparent 65%);-webkit-mask-image:radial-gradient(ellipse at 70% 30%,#000 10%,transparent 65%);opacity:.5;pointer-events:none}
     .hero .wrap{position:relative;z-index:1}
-    .eyebrow{color:var(--gold);text-transform:uppercase;letter-spacing:.24em;font-size:.74rem;font-weight:600;margin:0 0 1.2rem}
+    .eyebrow{color:var(--gold);text-transform:uppercase;letter-spacing:.24em;font-size:.74rem;font-weight:600;margin:0 0 .85rem}
     h1,h2,h3.display{font-family:"Fraunces",Georgia,serif;font-weight:500}
-    h1{font-size:clamp(2.4rem,6.5vw,4.4rem);line-height:1.04;margin:0 0 1.4rem;letter-spacing:-.025em;max-width:16ch}
+    h1{font-size:clamp(2.4rem,6.5vw,4.4rem);line-height:1.04;margin:0 0 1rem;letter-spacing:-.025em;max-width:16ch}
     h1 em{font-style:italic;color:var(--sky2)}
-    .lede{color:var(--muted);font-size:clamp(1.05rem,2vw,1.2rem);max-width:38rem;margin:0 0 2rem}
+    .lede{color:var(--muted);font-size:clamp(1.05rem,2vw,1.2rem);max-width:38rem;margin:0 0 1.35rem}
     .badge{display:inline-flex;align-items:center;gap:.5rem;color:var(--text);font-size:.85rem;font-weight:500;border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:999px;padding:.45rem 1rem}
     .badge:before{content:"";width:.4rem;height:.4rem;border-radius:50%;background:var(--sky)}
-    section{padding:5.5rem 0;border-top:1px solid var(--line)}
+    section{padding:3.25rem 0;border-top:1px solid var(--line)}
     .kicker{color:var(--sky);text-transform:uppercase;letter-spacing:.2em;font-size:.72rem;font-weight:600;margin:0 0 .7rem}
     h2{font-size:clamp(1.8rem,3.6vw,2.5rem);line-height:1.15;margin:0 0 .6rem;letter-spacing:-.015em}
-    .sub{color:var(--muted);margin:0 0 2.6rem;max-width:40rem}
+    .sub{color:var(--muted);margin:0 0 1.25rem;max-width:40rem}
     .grid{display:grid;gap:1.25rem;grid-template-columns:1fr}
     @media(min-width:640px){.grid{grid-template-columns:1fr 1fr}}
     @media(min-width:960px){.grid.three{grid-template-columns:repeat(3,1fr)}}
@@ -58,24 +58,42 @@
     .terms{margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--line);color:var(--muted);font-size:.88rem}
     .step{font-family:"Fraunces",Georgia,serif;font-style:italic;color:var(--gold);font-size:2.2rem;line-height:1;margin-bottom:.9rem}
     .not{color:var(--muted);font-size:.93rem}
-    footer{border-top:1px solid var(--line);padding:2.5rem 0 3.5rem;color:var(--muted);font-size:.84rem;text-align:center}
+    footer{border-top:1px solid var(--line);padding:1.85rem 0 2.3rem;color:var(--muted);font-size:.84rem;text-align:center}
     footer .logo{display:block;margin-bottom:.6rem}
     .trust{background:var(--ink);border-bottom:1px solid var(--line);padding:1rem 0;text-align:center;color:var(--muted);font-size:.82rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase}
     .tier{position:relative}.tier .amt{font-family:"Fraunces",Georgia,serif;font-size:2.8rem;font-weight:500;color:#fff;line-height:1.1;margin:.3rem 0 .6rem;letter-spacing:-.02em}
     .tier.pop{border-color:rgba(217,180,106,.55);background:linear-gradient(180deg,rgba(217,180,106,.08),rgba(255,255,255,.01))}
     .pill{position:absolute;top:-.75rem;right:1.2rem;background:var(--gold);color:#1a1405;font-size:.68rem;font-weight:700;letter-spacing:.1em;padding:.25rem .7rem;border-radius:999px;text-transform:uppercase}
     .addons{display:flex;flex-wrap:wrap;gap:.6rem;list-style:none;padding:0;margin:1rem 0 0}.addons li{border:1px solid var(--line);border-radius:999px;padding:.4rem .95rem;font-size:.86rem;color:var(--text);background:rgba(255,255,255,.02)}
-    h3.small{margin:2.4rem 0 0;font-size:.78rem;text-transform:uppercase;letter-spacing:.2em;color:var(--sky);font-weight:600}
+    h3.small{margin:1.5rem 0 0;font-size:.78rem;text-transform:uppercase;letter-spacing:.2em;color:var(--sky);font-weight:600}
     details{border-bottom:1px solid var(--line);padding:1.2rem 0}summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between}summary::-webkit-details-marker{display:none}summary:after{content:"+";color:var(--sky);font-size:1.3rem;line-height:1;transition:transform .25s}details[open] summary:after{transform:rotate(45deg)}details p{color:var(--muted);margin:.6rem 0 0}
-    .soon{text-align:center}.soon .sub{margin:0 auto;font-size:1.1rem}
-    .work-layout{display:grid;gap:1.5rem;align-items:center}
-    @media(min-width:800px){.work-layout{grid-template-columns:minmax(0,1fr) minmax(16rem,22.5rem)}.work-layout .sub{margin-bottom:0}}
-    .sample{margin:0}
-    .sample video{width:100%;height:auto;display:block;border-radius:12px;background:#000}
-    .sample figcaption{margin:.95rem 0 0;color:var(--muted);font-size:.92rem}
+    .soon{text-align:center;padding:2.5rem 0}.soon .sub{margin:0 auto;font-size:1.08rem;max-width:28rem}
+    .work-stage{display:grid;gap:1rem;grid-template-areas:"intro" "video" "meta"}
+    .work-intro{grid-area:intro}
+    .work-intro .sub{margin:0;max-width:36rem}
+    .work-intro h2{max-width:14ch;line-height:1.08}
+    .work-intro h2 em{font-style:italic;color:var(--sky2)}
+    .sample{grid-area:video;margin:0}
+    .sample video{width:100%;height:auto;display:block;border-radius:16px;background:#000;border:1px solid var(--line)}
+    .sample figcaption{margin:.65rem .1rem 0;color:var(--muted);font-size:.9rem}
+    .work-meta{grid-area:meta}
+    .work-points{list-style:none;margin:0;padding:0;display:grid;gap:.7rem}
+    .work-points li{margin:0;padding:.85rem 1rem;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012))}
+    .work-points h3{margin:0 0 .25rem;font-size:.98rem;font-weight:600;color:#fff}
+    .work-points p{margin:0;color:var(--muted);font-size:.92rem;line-height:1.5}
+    .work-rate{margin:.7rem 0 0;padding:.75rem 1rem;border-radius:14px;border:1px solid rgba(217,180,106,.45);background:linear-gradient(180deg,rgba(217,180,106,.09),rgba(255,255,255,.012));color:var(--text);font-size:.95rem}
+    .work-rate span{display:block;color:var(--gold);font-size:.72rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;margin-bottom:.15rem}
+    @media(min-width:900px){
+      .work-stage{grid-template-columns:minmax(20rem,28rem) minmax(0,1fr);grid-template-areas:"video intro" "video meta";column-gap:1.75rem;row-gap:.85rem;align-items:stretch}
+      .sample{align-self:stretch;display:flex;flex-direction:column}
+      .sample video{width:100%;height:auto}
+      .work-intro h2{font-size:clamp(2.15rem,3.2vw,3.05rem)}
+      .work-meta{align-self:end}
+      .work-points{grid-template-columns:1fr 1fr}
+    }
     .reveal{opacity:0;transform:translateY(14px);transition:opacity .8s ease,transform .8s ease}.reveal.in{opacity:1;transform:none}
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
-    @media(max-width:640px){nav{width:100%;display:flex;flex-wrap:wrap;gap:.45rem 1rem;justify-content:flex-start}nav a{margin-left:0;font-size:.82rem}.hero{padding:4.5rem 0 4rem}section{padding:4rem 0}.wrap{padding:0 1.15rem}}
+    @media(max-width:640px){nav{width:100%;display:flex;flex-wrap:wrap;gap:.45rem 1rem;justify-content:flex-start}nav a{margin-left:0;font-size:.82rem}.hero{padding:3rem 0 2.45rem}section{padding:2.6rem 0}.soon{padding:2.15rem 0}.wrap{padding:0 1.15rem}.work-points h3{font-size:.95rem}}
   </style>
 </head>
 <body>
@@ -136,18 +154,31 @@
 
     <section id="work">
       <div class="wrap">
-        <div class="work-layout">
-          <div>
+        <div class="work-stage">
+          <div class="work-intro">
             <p class="kicker">Work samples</p>
-            <h2>Showcase</h2>
-            <p class="sub">Edited aerial video of a tree job, documented from start to finish. Photo and video only — the same kind of pack that comes with promo and tree removal video.</p>
+            <h2>Tree removal, <em>start to finish.</em></h2>
+            <p class="sub">Edited aerial video and stills from one tree job — the same pack that comes with promo and tree removal video.</p>
           </div>
-          <figure class="reveal card sample">
+          <figure class="reveal sample">
             <video controls playsinline muted preload="metadata" poster="media/tree-removal-jan-2025-poster.jpg" aria-label="Tree removal documentation sample">
               <source src="media/tree-removal-jan-2025-web.mp4" type="video/mp4" />
             </video>
             <figcaption>Tree removal documentation — start to finish sample.</figcaption>
           </figure>
+          <div class="work-meta">
+            <ul class="work-points">
+              <li>
+                <h3>Start to finish</h3>
+                <p>The sample follows one tree removal from the beginning of the job through the finish.</p>
+              </li>
+              <li>
+                <h3>Photo and video pack</h3>
+                <p>Edited aerial video and stills. Photo and video documentation only.</p>
+              </li>
+            </ul>
+            <p class="work-rate"><span>Tree removal video</span>Up to 3 hrs, 60–90 sec edit + 10 stills — <strong>$350</strong></p>
+          </div>
         </div>
       </div>
     </section>
