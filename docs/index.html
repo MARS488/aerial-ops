@@ -68,9 +68,14 @@
     h3.small{margin:2.4rem 0 0;font-size:.78rem;text-transform:uppercase;letter-spacing:.2em;color:var(--sky);font-weight:600}
     details{border-bottom:1px solid var(--line);padding:1.2rem 0}summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between}summary::-webkit-details-marker{display:none}summary:after{content:"+";color:var(--sky);font-size:1.3rem;line-height:1;transition:transform .25s}details[open] summary:after{transform:rotate(45deg)}details p{color:var(--muted);margin:.6rem 0 0}
     .soon{text-align:center}.soon .sub{margin:0 auto;font-size:1.1rem}
+    .work-layout{display:grid;gap:1.5rem;align-items:center}
+    @media(min-width:800px){.work-layout{grid-template-columns:minmax(0,1fr) minmax(16rem,22.5rem)}.work-layout .sub{margin-bottom:0}}
+    .sample{margin:0}
+    .sample video{width:100%;height:auto;display:block;border-radius:12px;background:#000}
+    .sample figcaption{margin:.95rem 0 0;color:var(--muted);font-size:.92rem}
     .reveal{opacity:0;transform:translateY(14px);transition:opacity .8s ease,transform .8s ease}.reveal.in{opacity:1;transform:none}
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
-    @media(max-width:640px){nav{width:100%;display:flex;justify-content:space-between}nav a{margin-left:0;font-size:.82rem}.hero{padding:4.5rem 0 4rem}section{padding:4rem 0}.wrap{padding:0 1.15rem}}
+    @media(max-width:640px){nav{width:100%;display:flex;flex-wrap:wrap;gap:.45rem 1rem;justify-content:flex-start}nav a{margin-left:0;font-size:.82rem}.hero{padding:4.5rem 0 4rem}section{padding:4rem 0}.wrap{padding:0 1.15rem}}
   </style>
 </head>
 <body>
@@ -79,7 +84,7 @@
     <div class="wrap bar">
       <a class="logo" href="#top">AERIAL <span>OPS</span></a>
       <nav>
-        <a href="#services">Services</a><a href="#pricing">Pricing</a><a href="#how">How it works</a><a href="#contact">Contact</a>
+        <a href="#services">Services</a><a href="#work">Work</a><a href="#pricing">Pricing</a><a href="#how">How it works</a><a href="#contact">Contact</a>
       </nav>
     </div>
   </header>
@@ -123,8 +128,26 @@
           <div class="reveal card"><h3>Construction progress</h3><p>Same angles every visit, a date on every frame, and a short note on what changed.</p></div>
           <div class="reveal card"><h3>Storm and roof photo documentation</h3><p>Aerial photos with a written photo log you can hand to your own team.</p></div>
           <div class="reveal card"><h3>Commercial and business</h3><p>Aerial photos and edited video of storefronts, lots, and facilities.</p></div>
-          <div class="reveal card"><h3>Promo and tree removal video</h3><p>Edited aerial video for your business, or a tree job from start to finish.</p></div>
+          <div class="reveal card"><h3>Promo and tree removal video</h3><p>Edited aerial video for your business, or a tree job from start to finish. <a href="#work">See a sample</a>.</p></div>
           <div class="reveal card"><h3>Laminated prints</h3><p>Add a laminated print of your favorite aerial shot to any job.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="work">
+      <div class="wrap">
+        <div class="work-layout">
+          <div>
+            <p class="kicker">Work samples</p>
+            <h2>Showcase</h2>
+            <p class="sub">Edited aerial video of a tree job, documented from start to finish. Photo and video only — the same kind of pack that comes with promo and tree removal video.</p>
+          </div>
+          <figure class="reveal card sample">
+            <video controls playsinline muted preload="metadata" poster="media/tree-removal-jan-2025-poster.jpg" aria-label="Tree removal documentation sample">
+              <source src="media/tree-removal-jan-2025-web.mp4" type="video/mp4" />
+            </video>
+            <figcaption>Tree removal documentation — start to finish sample.</figcaption>
+          </figure>
         </div>
       </div>
     </section>
