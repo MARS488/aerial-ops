@@ -129,7 +129,9 @@ sha256sum -c SHA256SUMS.source
 
 ## Boundaries
 
-- Bind address is `127.0.0.1`. `SANDBOX_BIND=0.0.0.0` exits without listening.
+- Default bind address is `127.0.0.1`. `SANDBOX_BIND=0.0.0.0` without trusted-proxy exits without listening.
+- Trusted-proxy settings are a private rehearsal. See `HOSTING_READINESS.md`. The hosted candidate is FAIL.
+- One command for the isolated API handoff, with no browser: `python3 tests/run_isolated_regression.py`
 - No outbound client calls are made by the server.
 - The 19 board rows are a fixture copy. Their proof URL is the gap matrix. Nonempty proof does not paint a wall green.
 - Preserved counts stay 2 Built, 2 In progress, 15 Not started. The two Built rows are labels for LLC Active and Part 107. This software did not recheck those conditions and does not call them software builds.

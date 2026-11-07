@@ -22,11 +22,13 @@
   </section>
 
   <main id="client" class="sheet" hidden>
-    <p id="chapter" class="chapter">Create a fictional job</p>
+    <div class="stage">
+    <div>
+    <p id="chapter" class="chapter">Save a fictional job so you can follow it.</p>
     <header class="mast">
       <p class="eyebrow">CivilitySync</p>
-      <h1>A fictional job, saved on this computer</h1>
-      <p class="lede">This preview shows one made-up job moving from creation to a closed test. It does not accept customers.</p>
+      <h1>Follow one fictional job</h1>
+      <p class="lede">See a made-up job move through review, then find that same job on the sample castle. This does not accept customers.</p>
     </header>
 
     <section class="card" id="create-card" aria-labelledby="create-heading">
@@ -53,6 +55,12 @@
     <section class="card" id="job-card" hidden aria-labelledby="job-heading">
       <h2 id="job-heading">Saved job</h2>
       <p id="job-title" class="job-title">DEMO-JOB-001</p>
+      <ol id="rail" class="rail" aria-label="Fictional test steps">
+        <li data-step="received">Received</li>
+        <li data-step="in_review">In review</li>
+        <li data-step="reviewed">Reviewed</li>
+        <li data-step="closed_test">Closed test</li>
+      </ol>
       <p id="job-status" class="status">Received</p>
       <p id="job-note" class="hint">This is the same record the sample castle reads.</p>
       <button id="advance" type="button">Mark in review</button>
@@ -61,10 +69,12 @@
       <p id="evidence-note" class="hint" hidden></p>
     </section>
 
+    </div>
+    <div>
     <section class="card" id="castle" aria-labelledby="castle-heading">
       <h2 id="castle-heading">Sample castle</h2>
       <p class="hint">Sample visualization. This is not an earlier sketch. That source was not located.</p>
-      <canvas id="yard" width="880" height="360" aria-label="Sample castle with unverified checks"></canvas>
+      <canvas id="yard" width="960" height="420" aria-label="Sample castle with unverified checks"></canvas>
       <p id="shared-line" class="status">No fictional job saved yet</p>
       <p id="verified-count" class="status">Verified segments: 0</p>
       <p class="hint">All sample checks stay unverified. A saved job does not turn them green.</p>
@@ -85,6 +95,8 @@
         <li>No claim that a business, certificate, or filing is complete.</li>
       </ul>
     </section>
+    </div>
+    </div>
   </main>
 
   <footer class="sheet foot">

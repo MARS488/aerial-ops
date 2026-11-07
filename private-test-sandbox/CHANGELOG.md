@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-07 — Private hosted-candidate fixes, still FAIL
+
+The hosted candidate stays **FAIL**. Nothing was purchased, deployed, or invited. A local trusted-proxy hop on `127.0.0.1` now requires a proxy secret and `X-Forwarded-Proto: https`, accepts only the configured https origin, and adds `Secure` to the guest cookie in that mode. Loopback HTTP cookies stay without `Secure` so the local browser can store them. `/health` no longer writes a row and no longer names the operator account. Guest notes are an allowlist, a changed body on the same guest key returns `409`, and repeated direct guest-header failures return `429`. The guest rehearsal stops the process and boots the restored SQLite file. `tests/run_isolated_regression.py` runs the operator scenario, the guest rehearsal, and the proxy hop without a browser. Passing it does not sign hosted access or independent review.
+
 ## 2026-11-07 — Client preview, recording, and hosted rehearsal
 
 The page a person sees is now a fictional job preview: create `DEMO-JOB-001`, mark it in review, show the same saved job on the sample castle, mark it reviewed, close the test, and record fictional evidence with no points. The disclaimer stays on screen. Internal board titles, operator secrets, and debug dumps are not on that page. The 19 checks stay unverified and not green. The castle remains a new sample, and the original sketch is still not located.

@@ -89,6 +89,11 @@ class Client:
 def start_server(data: Path, log_path: Path, bind: str = "127.0.0.1") -> subprocess.Popen:
     env = os.environ.copy()
     env.pop("SANDBOX_TOKEN", None)
+    env.pop("SANDBOX_INGRESS", None)
+    env.pop("SANDBOX_PUBLIC_ORIGIN", None)
+    env.pop("SANDBOX_PROXY_SHARED_SECRET", None)
+    env.pop("SANDBOX_HOSTED", None)
+    env.pop("PORT", None)
     env["SANDBOX_DATA_DIR"] = str(data)
     env["SANDBOX_PORT"] = "0"
     env["SANDBOX_BIND"] = bind

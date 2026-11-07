@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -20,6 +21,10 @@ SERVER = ROOT / "server.py"
 def start(data: Path, hosted: bool, bind: str = "127.0.0.1", limit: str = "30") -> subprocess.Popen:
     env = os.environ.copy()
     env.pop("SANDBOX_TOKEN", None)
+    env.pop("SANDBOX_INGRESS", None)
+    env.pop("SANDBOX_PUBLIC_ORIGIN", None)
+    env.pop("SANDBOX_PROXY_SHARED_SECRET", None)
+    env.pop("PORT", None)
     env["SANDBOX_DATA_DIR"] = str(data)
     env["SANDBOX_PORT"] = "0"
     env["SANDBOX_BIND"] = bind
@@ -123,7 +128,6 @@ def read_secret(data: Path, guest_id: str) -> str:
 def main() -> int:
     root = ROOT / "run-output-guests"
     if root.exists():
-        import shutil
         shutil.rmtree(root)
     refused = start(root / "refuse", hosted=True, bind="0.0.0.0")
     try:
@@ -145,7 +149,13 @@ def main() -> int:
         rss = Path("/proc/%s/status" % proc.pid).read_text(encoding="utf-8")
         vmrss = next(line for line in rss.splitlines() if line.startswith("VmRSS:"))
         code, health, _ = call(port, "GET", "/health")
-        if code != 200 or health.get("hosted") is not True or health.get("public_bind_enabled") is not False:
+        if (
+            code != 200
+            or health.get("hosted") is not True
+            or health.get("public_bind_enabled") is not False
+            or "account" in health
+            or health.get("ingress") != "loopback"
+        ):
             print("FAIL health")
             return 1
         operator = (data / "access.token").read_text(encoding="utf-8").strip()
@@ -181,6 +191,15 @@ def main() -> int:
         if created.get("synthetic") is not True or listing_b.get("jobs") or code_get_b != 404:
             print("FAIL isolation")
             return 1
+        changed = job_body("ONE")
+        changed["site_label"] = "SYNTHETIC-GUEST-CHANGED"
+        code, _, _ = call(port, "POST", "/api/guest-jobs", changed, guest_headers(secret_a))
+        bad_note = job_body("NOTE")
+        bad_note["note"] = "123 Example St 202 555 0100"
+        code_note, _, _ = call(port, "POST", "/api/guest-jobs", bad_note, guest_headers(secret_a))
+        if code != 409 or code_note != 400:
+            print("FAIL guest contract")
+            return 1
         code, _, _ = call(port, "GET", "/api/test-records", headers=guest_headers(secret_a))
         if code != 401:
             print("FAIL guest read operator jobs")
@@ -215,6 +234,9 @@ def main() -> int:
                 "X-Sandbox-Client": "guest",
             },
         )
+        if "Secure" in cookie:
+            print("FAIL secure cookie on loopback http")
+            return 1
         if session_code != 200 or not cookie_jobs.get("jobs") or csrf.get("error") != "unauthorized" or cookie_ok.get("status") != "received":
             print("FAIL cookie session")
             return 1
@@ -271,6 +293,22 @@ def main() -> int:
         check.close()
         if count < 1:
             print("FAIL backup")
+            return 1
+        stop(proc)
+        boot = root / "boot"
+        boot.mkdir()
+        shutil.copy(restored, boot / "sandbox.sqlite")
+        proc = start(boot, hosted=True, limit="30")
+        info = listen(proc, boot)
+        code, listing, _ = call(info["port"], "GET", "/api/guest-jobs", headers=guest_headers(secret_c))
+        if code != 200 or not listing.get("jobs"):
+            print("FAIL restored app boot")
+            return 1
+        for _ in range(8):
+            call(info["port"], "GET", "/api/guest-jobs", headers=guest_headers("wrong-guest-secret-value"))
+        code, _, _ = call(info["port"], "GET", "/api/guest-jobs", headers=guest_headers("wrong-guest-secret-value"))
+        if code != 429:
+            print("FAIL direct header throttle")
             return 1
         print("PASS guest isolation")
         print(vmrss)

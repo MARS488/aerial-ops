@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Private loopback test sandbox. Python standard library only.
+"""Private test sandbox. Python standard library only.
 
-Listens on 127.0.0.1. Does not call Notion, Dropbox, Stripe, Base44,
-or any other network service. Does not print the access secret.
+Default listen is 127.0.0.1. Trusted-proxy mode is opt-in and fail-closed.
+Does not call Notion, Dropbox, Stripe, Base44, or any other network service.
+Does not print the access secret or the proxy secret.
 """
 
 from __future__ import annotations
@@ -258,14 +259,7 @@ class Store:
 
     def probe(self) -> bool:
         with self.lock:
-            now = utcnow()
-            self.conn.execute("BEGIN IMMEDIATE")
-            self.conn.execute(
-                "INSERT INTO meta(k, v) VALUES('health_probe', ?) "
-                "ON CONFLICT(k) DO UPDATE SET v=excluded.v",
-                (now,),
-            )
-            self.conn.commit()
+            self.conn.execute("SELECT 1").fetchone()
         return True
 
     def create_record(self, body: dict[str, Any]) -> tuple[int, dict[str, Any]]:
@@ -854,12 +848,20 @@ class Handler(BaseHTTPRequestHandler):
         self._send(403, {"error": "forbidden"})
 
     def _route(self, method: str) -> None:
-        if self.client_address[0] != BIND_HOST:
+        ingress = getattr(self.server, "ingress", None)
+        if ingress is None or ingress.mode == "loopback":
+            if self.client_address[0] != BIND_HOST:
+                self._send(403, {"error": "forbidden"})
+                return
+        if ingress is not None and not hosted_preview.proxy_headers_ok(self.headers, ingress):
             self._send(403, {"error": "forbidden"})
             return
         path = unquote(urlparse(self.path).path)
         if path != path.replace("\\", "") or "\x00" in path or ".." in path:
             self._send(400, {"error": "bad_path"})
+            return
+        if not self._origin_ok():
+            self._send(403, {"error": "forbidden"})
             return
         if method == "GET" and path == "/health":
             self._health()
@@ -874,13 +876,7 @@ class Handler(BaseHTTPRequestHandler):
             if not getattr(self.server, "hosted", False):
                 self._send(404, {"error": "not_found"})
                 return
-            if not self._origin_ok():
-                self._send(403, {"error": "forbidden"})
-                return
             hosted_preview.dispatch(self, method, path)
-            return
-        if not self._origin_ok():
-            self._send(403, {"error": "forbidden"})
             return
         if not self._authorized():
             self._send(401, {"error": "unauthorized"})
@@ -936,26 +932,29 @@ class Handler(BaseHTTPRequestHandler):
         except sqlite3.Error:
             writable = False
         port = self.server.server_address[1]
+        bind_host = self.server.server_address[0]
+        ingress = getattr(self.server, "ingress", None)
         self._send(
             200,
             {
                 "ok": writable and self.server.ready,
                 "ready": writable and self.server.ready,
-                "bind": BIND_HOST,
+                "bind": bind_host,
                 "port": port,
                 "mode": "private-test",
                 "live_intake_enabled": LIVE_INTAKE_ENABLED,
                 "money_actions": MONEY_ACTIONS,
-                "public_listen": False,
+                "public_listen": bind_host == "0.0.0.0",
                 "store": "sqlite",
                 "store_writable": writable,
-                "account": ACCOUNT,
                 "original_stronghold_executable": "NOT_LOCATED",
                 "castle_prototype": "NEW-MINIMAL-PROTOTYPE-NOT-ORIGINAL",
                 "notion_connected": False,
                 "base44": False,
                 "hosted": bool(getattr(self.server, "hosted", False)),
-                "public_bind_enabled": False,
+                "public_bind_enabled": bind_host == "0.0.0.0",
+                "ingress": ingress.mode if ingress is not None else "loopback",
+                "https_cookies": bool(ingress.https_cookies) if ingress is not None else False,
             },
         )
 
@@ -1038,14 +1037,14 @@ class Handler(BaseHTTPRequestHandler):
         return token_ok and account_ok
 
     def _origin_ok(self) -> bool:
-        origin = self.headers.get("Origin")
-        if not origin:
-            return True
-        port = self.server.server_address[1]
-        return origin in {
-            "http://127.0.0.1:%s" % port,
-            "http://localhost:%s" % port,
-        }
+        ingress = getattr(self.server, "ingress", None)
+        if ingress is None:
+            ingress = hosted_preview.Ingress("loopback", BIND_HOST, "", False, "")
+        return hosted_preview.origin_allowed(
+            self.headers.get("Origin"),
+            ingress,
+            self.server.server_address[1],
+        )
 
     def _json_body(self) -> tuple[Optional[dict[str, Any]], Optional[int]]:
         try:
@@ -1113,36 +1112,37 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def serve() -> None:
-    requested = os.environ.get("SANDBOX_BIND", BIND_HOST)
-    if requested != BIND_HOST:
-        raise SystemExit(
-            "Refusing to listen on %s. Public bind is not enabled. "
-            "Hosted mode in this stage stays on 127.0.0.1." % requested
-        )
+    ingress = hosted_preview.load_ingress()
     data_dir = Path(os.environ.get("SANDBOX_DATA_DIR", str(ROOT / "data"))).resolve()
+    raw_port = os.environ.get("SANDBOX_PORT")
+    if raw_port is None and ingress.mode == "trusted-proxy":
+        raw_port = os.environ.get("PORT", "8765")
+    if raw_port is None:
+        raw_port = "8765"
     try:
-        port = int(os.environ.get("SANDBOX_PORT", "8765"))
+        port = int(raw_port)
     except ValueError:
-        raise SystemExit("SANDBOX_PORT must be an integer.")
+        raise SystemExit("Port must be an integer.")
     if port < 0 or port > 65535:
-        raise SystemExit("SANDBOX_PORT is out of range.")
+        raise SystemExit("Port is out of range.")
     load_fixture()
     token = load_token(data_dir)
     store = Store(data_dir / "sandbox.sqlite")
-    server = SandboxServer((BIND_HOST, port), Handler)
-    if server.server_address[0] != BIND_HOST:
+    server = SandboxServer((ingress.bind_host, port), Handler)
+    if server.server_address[0] != ingress.bind_host:
         server.server_close()
-        raise SystemExit("Refusing a non-loopback socket.")
+        raise SystemExit("Refusing an unexpected bind address.")
     server.token = token
     server.store = store
     server.guest_book = store.guest_book
     server.hosted = hosted_preview.hosted_enabled()
+    server.ingress = ingress
     server.ready = True
     actual_port = server.server_address[1]
     listen_path = data_dir / "listen.json"
     listen_path.write_text(
         json.dumps(
-            {"host": BIND_HOST, "port": actual_port, "pid": os.getpid()},
+            {"host": ingress.bind_host, "port": actual_port, "pid": os.getpid()},
             sort_keys=True,
         ),
         encoding="utf-8",
@@ -1150,9 +1150,15 @@ def serve() -> None:
     os.chmod(listen_path, 0o600)
     print(
         "private-test bind=%s:%s live_intake=false money_actions=false "
-        "public_listen=false hosted=%s account=%s secret_file=data/access.token "
+        "public_listen=%s hosted=%s ingress=%s secret_file=data/access.token "
         "original_stronghold=NOT_LOCATED"
-        % (BIND_HOST, actual_port, str(server.hosted).lower(), ACCOUNT),
+        % (
+            ingress.bind_host,
+            actual_port,
+            str(ingress.bind_host == "0.0.0.0").lower(),
+            str(server.hosted).lower(),
+            ingress.mode,
+        ),
         file=sys.stderr,
     )
 

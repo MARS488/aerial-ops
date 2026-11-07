@@ -1,7 +1,10 @@
 """Hosted-preview rehearsal. Off unless SANDBOX_HOSTED=1.
 
-This stage still binds 127.0.0.1 only. It does not open a public port,
-send an invitation, or share the operator secret with a guest.
+Default ingress is loopback and refuses every bind except 127.0.0.1.
+Trusted-proxy mode is a private rehearsal: it requires an https origin
+and a long proxy secret, and it still does not purchase, deploy, or invite.
+The hosted candidate stays FAIL until a real provider, TLS name, and
+restore-off-service check are signed by someone else.
 """
 
 from __future__ import annotations
@@ -30,8 +33,79 @@ def hosted_enabled() -> bool:
     return os.environ.get("SANDBOX_HOSTED") == "1"
 
 
-def public_bind_allowed() -> bool:
-    return False
+GUEST_NOTES = {
+    "",
+    "fictional guest job",
+    "fictional review",
+    "fictional review step",
+    "fictional evidence",
+}
+
+
+class Ingress:
+    def __init__(self, mode: str, bind_host: str, public_origin: str, https_cookies: bool, proxy_secret: str) -> None:
+        self.mode = mode
+        self.bind_host = bind_host
+        self.public_origin = public_origin
+        self.https_cookies = https_cookies
+        self.proxy_secret = proxy_secret
+
+
+def _https_origin(origin: str) -> bool:
+    if not origin.startswith("https://"):
+        return False
+    rest = origin[len("https://") :]
+    return bool(rest) and "/" not in rest and " " not in rest and "@" not in rest
+
+
+def load_ingress() -> Ingress:
+    """Fail closed. Public bind is allowed only for an explicit trusted-proxy config."""
+    hosted = hosted_enabled()
+    ingress = os.environ.get("SANDBOX_INGRESS", "loopback")
+    bind = os.environ.get("SANDBOX_BIND", "127.0.0.1")
+    origin = os.environ.get("SANDBOX_PUBLIC_ORIGIN", "").strip()
+    secret = os.environ.get("SANDBOX_PROXY_SHARED_SECRET", "")
+    if ingress == "loopback":
+        if bind != "127.0.0.1":
+            raise SystemExit(
+                "Refusing non-loopback bind. Trusted-proxy mode was not selected."
+            )
+        return Ingress("loopback", "127.0.0.1", "", False, "")
+    if not hosted or ingress != "trusted-proxy":
+        raise SystemExit("Ingress configuration is incomplete. Fail closed.")
+    if not _https_origin(origin):
+        raise SystemExit(
+            "SANDBOX_PUBLIC_ORIGIN must be an https origin with no path. Fail closed."
+        )
+    if len(secret) < 24:
+        raise SystemExit(
+            "SANDBOX_PROXY_SHARED_SECRET is missing or short. Fail closed. Value not printed."
+        )
+    if bind not in ("127.0.0.1", "0.0.0.0"):
+        raise SystemExit("SANDBOX_BIND is not allowed. Fail closed.")
+    return Ingress("trusted-proxy", bind, origin, True, secret)
+
+
+def proxy_headers_ok(headers: Any, ingress: Ingress) -> bool:
+    if ingress.mode != "trusted-proxy":
+        return True
+    presented = headers.get("X-Sandbox-Proxy-Secret") or ""
+    if len(presented) != len(ingress.proxy_secret):
+        return False
+    if not hmac.compare_digest(presented, ingress.proxy_secret):
+        return False
+    return (headers.get("X-Forwarded-Proto") or "").lower() == "https"
+
+
+def origin_allowed(origin: Optional[str], ingress: Ingress, port: int) -> bool:
+    if not origin:
+        return True
+    if ingress.mode == "trusted-proxy":
+        return origin == ingress.public_origin
+    return origin in {
+        "http://127.0.0.1:%s" % port,
+        "http://localhost:%s" % port,
+    }
 
 
 def utc_iso(epoch: int) -> str:
@@ -235,8 +309,6 @@ class GuestBook:
         return result
 
     def create_job(self, guest_id: str, body: dict[str, Any]) -> dict[str, Any]:
-        if not self._write_allowed(guest_id):
-            return _error(429, "too_many_writes")
         site = body.get("site_label")
         purpose = body.get("purpose")
         package = body.get("package_code")
@@ -264,25 +336,39 @@ class GuestBook:
             return _error(400, "validation_failed")
         if not isinstance(correlation, str) or not CORR_RE.fullmatch(correlation):
             return _error(400, "validation_failed")
-        if not isinstance(note, str) or not NOTE_RE.fullmatch(note):
+        if note not in GUEST_NOTES:
             return _error(400, "validation_failed")
         with self.lock:
             self.conn.execute("BEGIN IMMEDIATE")
+            existing = self.conn.execute(
+                "SELECT * FROM guest_jobs WHERE guest_id = ? AND idempotency_key = ?",
+                (guest_id, key),
+            ).fetchone()
+            if existing is not None:
+                same = (
+                    existing["site_label"] == site
+                    and existing["purpose"] == purpose
+                    and existing["package_code"] == package
+                    and existing["correlation_id"] == correlation
+                    and existing["note"] == note
+                )
+                self.conn.commit()
+                if not same:
+                    return _error(409, "conflict")
+                payload = _job(existing)
+                payload["deduped"] = True
+                return {"status": 200, "body": payload}
             count = self.conn.execute(
                 "SELECT COUNT(*) AS n FROM guest_jobs WHERE guest_id = ?", (guest_id,)
             ).fetchone()["n"]
             if count >= 20:
                 self.conn.rollback()
                 return _error(429, "too_many_jobs")
-            existing = self.conn.execute(
-                "SELECT * FROM guest_jobs WHERE guest_id = ? AND idempotency_key = ?",
-                (guest_id, key),
-            ).fetchone()
-            if existing is not None:
-                self.conn.commit()
-                payload = _job(existing)
-                payload["deduped"] = True
-                return {"status": 200, "body": payload}
+            self.conn.commit()
+        if not self._write_allowed(guest_id):
+            return _error(429, "too_many_writes")
+        with self.lock:
+            self.conn.execute("BEGIN IMMEDIATE")
             job_id = "GJ-%04d" % (
                 self.conn.execute("SELECT COUNT(*) AS n FROM guest_jobs").fetchone()["n"] + 1
             )
@@ -344,12 +430,19 @@ class GuestBook:
             rows = self.conn.execute(
                 "SELECT id, secret_hash, revoked, expires_at FROM guests"
             ).fetchall()
+            self.conn.execute("DELETE FROM guest_attempts WHERE created_at < ?", (now - 600,))
+            self.conn.execute("DELETE FROM guest_sessions WHERE expires_at < ?", (now,))
+            self.conn.commit()
         for row in rows:
             if row["revoked"] or row["expires_at"] < now:
                 continue
             if _match(secret, row["secret_hash"]):
                 return row["id"]
+        self._record_attempt("direct-header")
         return None
+
+    def direct_header_blocked(self) -> bool:
+        return not self._attempt_allowed("direct-header")
 
     def _valid_guest(self, guest_id: str, secret: str) -> Optional[sqlite3.Row]:
         now = int(time.time())
@@ -453,6 +546,8 @@ def dispatch(handler: Any, method: str, path: str) -> None:
         _slots(handler, book, method, path)
         return
     guest_id = _guest_from_request(handler, book, method)
+    if guest_id == "":
+        return
     if guest_id is None:
         handler._send(401, {"error": "unauthorized"})
         return
@@ -490,17 +585,14 @@ def _session(handler: Any, book: GuestBook) -> None:
         return
     token = result.pop("cookie")
     max_age = result.pop("cookie_max_age")
-    handler._send(
-        200,
-        result["body"],
-        extra_headers=[
-            (
-                "Set-Cookie",
-                "guest_session=%s; HttpOnly; SameSite=Strict; Path=/; Max-Age=%s"
-                % (token, max_age),
-            )
-        ],
+    cookie = "guest_session=%s; HttpOnly; SameSite=Strict; Path=/; Max-Age=%s" % (
+        token,
+        max_age,
     )
+    ingress = getattr(getattr(handler, "server", None), "ingress", None)
+    if ingress is not None and ingress.https_cookies:
+        cookie += "; Secure"
+    handler._send(200, result["body"], extra_headers=[("Set-Cookie", cookie)])
 
 
 def _slots(handler: Any, book: GuestBook, method: str, path: str) -> None:
@@ -543,4 +635,8 @@ def _guest_from_request(handler: Any, book: GuestBook, method: str) -> Optional[
             return None
     if handler._authorized():
         return None
-    return book.identify(secret, session)
+    if secret and book.direct_header_blocked():
+        handler._send(429, {"error": "too_many_attempts"})
+        return ""
+    found = book.identify(secret, session)
+    return found

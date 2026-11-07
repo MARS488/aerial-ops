@@ -23,11 +23,18 @@
     closed_test: "Close fictional test"
   };
   var CHAPTER = {
-    received: "Review it",
-    in_review: "See the same saved job in the castle",
-    reviewed: "Continue the fictional review",
-    closed_test: "Evidence remains unverified"
+    received: "The job is saved. Review is the next fictional step.",
+    in_review: "The same saved job is on the sample castle.",
+    reviewed: "Reviewed is a test step, not a finished gate.",
+    closed_test: "The test is closed. Evidence adds no points."
   };
+  var NOTE = {
+    received: "Saved on this computer. The castle reads this same job.",
+    in_review: "In review only changes this fictional step. Checks stay unverified.",
+    reviewed: "Reviewed means further along in the test, not a completed gate.",
+    closed_test: "The fictional test is closed. Sample checks are still unverified."
+  };
+  var ORDER = ["received", "in_review", "reviewed", "closed_test"];
   var job = null;
   var board = null;
 
@@ -179,7 +186,9 @@
       document.getElementById("create-job").disabled = true;
       text("job-title", DEMO.name);
       text("job-status", STATUS_LABEL[job.status] || job.status);
-      text("chapter", CHAPTER[job.status] || "Create a fictional job");
+      text("job-note", NOTE[job.status] || "This is the same record the sample castle reads.");
+      text("chapter", CHAPTER[job.status] || "Save a fictional job so you can follow it.");
+      paintRail(job.status);
       var next = NEXT[job.status];
       if (next) {
         advance.hidden = false;
@@ -209,34 +218,77 @@
     });
   }
 
+  function paintRail(status) {
+    var index = ORDER.indexOf(status);
+    document.querySelectorAll("#rail li").forEach(function (item) {
+      var step = ORDER.indexOf(item.getAttribute("data-step"));
+      var state = "upcoming";
+      if (step < index) state = "done";
+      if (step === index) state = "current";
+      item.setAttribute("data-state", state);
+    });
+  }
+
+  function fillRound(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    ctx.fill();
+  }
+
   function draw() {
     var canvas = document.getElementById("yard");
     if (!canvas || !board) return;
     var ctx = canvas.getContext("2d");
+    var w = canvas.width;
+    var h = canvas.height;
     var rows = board.compliance.rows;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#efe8da";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#8aa0ad";
-    ctx.fillRect(48, 36, 784, 250);
-    ctx.fillStyle = "#e4dccb";
-    ctx.fillRect(86, 70, 708, 180);
-    rows.forEach(function (row, index) {
-      var x = 108 + (index % 10) * 68;
-      var y = 92 + Math.floor(index / 10) * 48;
-      ctx.fillStyle = row.wall_display === "green" ? "#2f6b3c" : "#6e685c";
-      ctx.fillRect(x, y, 48, 26);
-    });
-    ctx.fillStyle = "#1b2420";
-    ctx.font = "22px Georgia, serif";
-    ctx.fillText("Sample visualization — not an earlier sketch", 108, 214);
-    ctx.font = "18px Georgia, serif";
     var match = null;
     board.jobs.forEach(function (row) {
       if (row.idempotency_key === DEMO.key) match = row;
     });
-    ctx.fillText(match ? (DEMO.name + " · " + (STATUS_LABEL[match.status] || match.status)) : "No fictional job saved yet", 108, 244);
-    ctx.fillText("Verified segments: " + board.compliance.green_walls, 108, 272);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#e4eef3";
+    ctx.fillRect(0, 0, w, 210);
+    ctx.fillStyle = "#efe6d6";
+    ctx.fillRect(0, 210, w, h - 210);
+    ctx.fillStyle = "#8aa0ad";
+    fillRound(ctx, 78, 168, w - 156, 150, 28);
+    ctx.fillStyle = "#6d675c";
+    ctx.fillRect(150, 132, w - 300, 150);
+    ctx.fillStyle = "#7a7468";
+    for (var notch = 0; notch < 12; notch += 1) {
+      ctx.fillRect(168 + notch * 52, 112, 28, 24);
+    }
+    ctx.fillStyle = "#524d45";
+    ctx.fillRect(112, 78, 78, 214);
+    ctx.fillRect(w - 190, 78, 78, 214);
+    ctx.fillStyle = "#6d675c";
+    ctx.fillRect(104, 64, 94, 20);
+    ctx.fillRect(w - 198, 64, 94, 20);
+    ctx.fillStyle = "#efe6d6";
+    ctx.beginPath();
+    ctx.arc(w / 2, 214, 34, Math.PI, 0);
+    ctx.rect(w / 2 - 34, 214, 68, 68);
+    ctx.fill();
+    rows.forEach(function (row, index) {
+      var x = 176 + index * ((w - 380) / Math.max(rows.length - 1, 1));
+      ctx.fillStyle = row.wall_display === "green" ? "#2f6b3c" : "#3e3a34";
+      fillRound(ctx, x, 246, 16, 16, 3);
+    });
+    ctx.fillStyle = "#1a2420";
+    ctx.font = "600 22px system-ui, Segoe UI, Helvetica, Arial, sans-serif";
+    ctx.fillText("Sample visualization. Not an earlier sketch.", 96, h - 52);
+    ctx.font = "20px system-ui, Segoe UI, Helvetica, Arial, sans-serif";
+    ctx.fillText(
+      match ? (DEMO.name + "  ·  " + (STATUS_LABEL[match.status] || match.status)) : "No fictional job saved yet",
+      96,
+      h - 24
+    );
   }
 
   window.__previewBound = true;

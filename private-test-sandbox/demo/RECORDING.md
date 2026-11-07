@@ -4,30 +4,36 @@ This is a screen capture of the preview running in this cloud session. It is not
 
 | File | What it is |
 | --- | --- |
-| `civilitysync_preview_walkthrough.mp4` | Full take, 154.4 seconds (2 minutes 34 seconds), 1920x1080, H.264, 30 fps |
-| `civilitysync_preview_promo.mp4` | 40.0 second cut from that same take |
+| `civilitysync_preview_walkthrough.mp4` | Full take, 134.4 seconds (2 minutes 14 seconds), 1920x1080, H.264, 30 fps, no audio |
+| `civilitysync_preview_promo.mp4` | 39.0 second cut from that same take, no audio |
 
 Captured November 7, 2026 on the cloud VM with Xvfb, Google Chrome, and ffmpeg `x11grab`. The browser clicked the real buttons. The local API scenario does not start this capture. `dev/cloud_walkthrough.py` exits immediately unless `CLOUD_DEV_CAPTURE=1`.
 
+The file opens and closes with a title card. The frames between those cards are the running preview. No narration was added. A local speech tool was not available, and a network voice was not used.
+
 The sign-in screen is not in the file. The access secret is not shown. No person is named. No price, contact line, or invitation appears.
 
-SHA-256 of the full take: `5b8d8c36d181737dfe4047ade40235fd67b5bdce8e5178fe84674b81d0f742a1`
+SHA-256 of the full take: `2e4bc97e8480dd594f36317946348f2a9ace616c0c5dfe0f21660ef68ee50873`
 
-SHA-256 of the 40 second cut: `ebf4443ae6e299129f467d4027d24427ee259f25f4a1551e5ddcb76bb99a2870`
+SHA-256 of the 39 second cut: `f28322458b200bde53e19edc1be88bd49c1acac3bbbc10aecd35243c7aaedd5c`
 
 ## Timed outline of the full take
 
+The title card is the first 6 seconds. The clocks below are on the finished file.
+
 | Clock | On screen |
 | --- | --- |
-| 0:00 | Fictional form for DEMO-JOB-001. Disclaimer is already visible. |
-| 0:18 | Job saved. Status: Received. |
-| 0:38 | Status: In review. |
-| 0:54 | Sample castle shows that same job. Verified segments: 0. |
-| 1:20 | Status: Reviewed. |
-| 1:38 | Status: Fictional test closed. |
-| 1:54 | Fictional evidence saved. No points were added. |
-| 2:12 | What the preview shows, and what it is not connected to. |
-| 2:34 | End. |
+| 0:00 | Title card. |
+| 0:06 | Fictional form for DEMO-JOB-001. Disclaimer is already visible. |
+| 0:20 | Job saved. Status: Received. |
+| 0:36 | Status: In review. |
+| 0:50 | Sample castle shows that same job. Verified segments: 0. |
+| 1:08 | Status: Reviewed. |
+| 1:22 | Status: Fictional test closed. |
+| 1:36 | Fictional evidence saved. No points were added. |
+| 1:52 | What the preview shows, and what it is not connected to. |
+| 2:08 | End card. |
+| 2:14 | End. |
 
 The promo uses short pieces of the same frames: the form, the saved job, the castle, the evidence line, and the closing limits. It is not a separate shoot and it does not ask anyone to buy or book.
 
