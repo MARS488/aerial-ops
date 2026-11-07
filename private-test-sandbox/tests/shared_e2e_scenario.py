@@ -33,18 +33,13 @@ JOB_FIELDS = (
     "site_label",
     "purpose",
     "package_code",
+    "synthetic",
     "status",
     "note",
     "billing_state",
     "amount_cents",
     "invoice",
 )
-
-
-def environment_name() -> str:
-    if Path("/opt/cursor").exists():
-        return "cloud_vm_loopback"
-    return "local_process"
 
 
 def canonical(value: Any) -> str:
@@ -191,6 +186,14 @@ def sqlite_counts(path: Path) -> dict:
         events = conn.execute("SELECT COUNT(*) FROM events").fetchone()[0]
         scores = conn.execute("SELECT COUNT(*) FROM score_events").fetchone()[0]
         billing = conn.execute("SELECT billing_state, amount_cents FROM records").fetchall()
+        record_synthetic = [row[0] for row in conn.execute("SELECT synthetic FROM records").fetchall()]
+        score_rows = [
+            {"synthetic": row[0], "points": row[1]}
+            for row in conn.execute("SELECT synthetic, points FROM score_events").fetchall()
+        ]
+        score_payloads = [
+            json.loads(row[0]) for row in conn.execute("SELECT payload_json FROM score_events").fetchall()
+        ]
     finally:
         conn.close()
     return {
@@ -198,6 +201,9 @@ def sqlite_counts(path: Path) -> dict:
         "events": events,
         "score_events": scores,
         "billing_rows": [{"billing_state": row[0], "amount_cents": row[1]} for row in billing],
+        "record_synthetic": record_synthetic,
+        "score_rows": score_rows,
+        "score_payloads": score_payloads,
     }
 
 
@@ -272,7 +278,8 @@ def write_outputs(out: Path, report: dict, ledger: Optional[dict], db_counts: Op
         "Overall: `%s`" % report["overall"],
         "",
         "Browser interaction was not run. SKIPPED_NOT_RUN is not a pass.",
-        "Independent review is BLOCKED. This process does not certify the result.",
+        "Independent review stays PENDING. This process does not sign it.",
+        "The environment value comes only from --execution-environment.",
         "",
         "| Stage | Outcome | Detail |",
         "| --- | --- | --- |",
@@ -284,10 +291,12 @@ def write_outputs(out: Path, report: dict, ledger: Optional[dict], db_counts: Op
     (out / "run-report.md").write_text("\n".join(lines), encoding="utf-8")
 
 
-def parse_args(argv: list[str]) -> Path:
-    """API-only is the only mode. Browser flags are rejected before any process starts."""
+def parse_args(argv: list[str]) -> tuple[Path, Optional[str]]:
+    """API-only is the only mode. The environment is whatever flag the invoker passes."""
     out = ROOT / "run-output"
+    declared = None
     saw_output = False
+    saw_environment = False
     index = 1
     while index < len(argv):
         arg = argv[index]
@@ -297,7 +306,8 @@ def parse_args(argv: list[str]) -> Path:
         if arg in {"--with-browser", "--browser", "--capture"}:
             raise SystemExit(
                 "This scenario does not start a browser. "
-                "Run: python3 tests/shared_e2e_scenario.py --api-only --output run-output"
+                "Run: python3 tests/shared_e2e_scenario.py --api-only "
+                "--execution-environment cloud_vm_loopback --output run-output"
             )
         if arg == "--output":
             if saw_output or index + 1 >= len(argv):
@@ -306,14 +316,26 @@ def parse_args(argv: list[str]) -> Path:
             saw_output = True
             index += 2
             continue
+        if arg == "--execution-environment":
+            if saw_environment or index + 1 >= len(argv):
+                raise SystemExit("--execution-environment needs one value")
+            declared = argv[index + 1]
+            if declared not in {"cloud_vm_loopback", "parent_local"}:
+                raise SystemExit(
+                    "--execution-environment must be cloud_vm_loopback or parent_local"
+                )
+            saw_environment = True
+            index += 2
+            continue
         raise SystemExit(
-            "Unknown argument. Supported: --api-only, --skip-browser, --output DIR"
+            "Unknown argument. Supported: --api-only, --skip-browser, "
+            "--execution-environment cloud_vm_loopback|parent_local, --output DIR"
         )
-    return out
+    return out, declared
 
 
 def main() -> int:
-    out = parse_args(sys.argv)
+    out, declared_environment = parse_args(sys.argv)
     expected = json.loads(EXPECTED_PATH.read_text(encoding="utf-8"))
     if out.exists():
         shutil.rmtree(out)
@@ -380,13 +402,26 @@ def main() -> int:
         if code != 400:
             fail("invalid.identifier", "expected 400 got %s" % code)
         add("invalid.identifier", "PASS", "400")
+        nonsynthetic = expected_body(expected)
+        nonsynthetic["synthetic"] = False
+        nonsynthetic["idempotency_key"] = "idem-not-synthetic"
+        nonsynthetic["correlation_id"] = "CORR-SYNTHETIC-NOT-A-JOB"
+        code, payload = client.call("POST", "/api/test-records", nonsynthetic)
+        if code != 400 or payload.get("error") != "validation_failed":
+            fail("synthetic.job_rejected", "expected 400 got %s" % code)
+        add("synthetic.job_rejected", "PASS", "400")
         code, listing = client.call("GET", "/api/test-records")
         if code != 200 or listing.get("records"):
             fail("invalid.stored_nothing", "invalid input left a job")
         add("invalid.stored_nothing", "PASS", "jobs=0")
 
         code, created = client.call("POST", "/api/test-records", expected_body(expected))
-        if code != 201 or created.get("id") != expected["job_id"] or created.get("deduped") is not False:
+        if (
+            code != 201
+            or created.get("id") != expected["job_id"]
+            or created.get("deduped") is not False
+            or created.get("synthetic") is not True
+        ):
             fail("valid.intake", "expected 201 %s got %s %s" % (expected["job_id"], code, created.get("id")))
         add("valid.intake", "PASS", created["id"])
         code, replay = client.call("POST", "/api/test-records", expected_body(expected))
@@ -439,6 +474,53 @@ def main() -> int:
             )
         add("replay.review", "PASS", "events=2 paid_rejected")
 
+        code, collided = client.call(
+            "POST",
+            "/api/test-records/%s/status" % expected["job_id"],
+            {
+                "status": "reviewed",
+                "note": expected["review_note"],
+                "dedup_key": expected["status_dedup_keys"]["in_review"],
+            },
+        )
+        _, after_collision = client.call("GET", "/api/test-records/%s" % expected["job_id"])
+        if code != 409 or collided.get("error") != "conflict" or len(after_collision.get("events", [])) != 2:
+            fail("status.dedup_collision", "expected 409 conflict got %s %s" % (code, collided.get("error")))
+        add("status.dedup_collision", "PASS", "409 conflict")
+
+        code, skipped = client.call(
+            "POST",
+            "/api/test-records/%s/status" % expected["job_id"],
+            {
+                "status": "closed_test",
+                "note": expected["review_note"],
+                "dedup_key": "status-idem-synthetic-job-0001-skip",
+            },
+        )
+        if code != 409 or skipped.get("error") != "invalid_transition":
+            fail("status.invalid_transition", "expected 409 invalid_transition got %s %s" % (code, skipped.get("error")))
+        add("status.invalid_transition", "PASS", "409 invalid_transition")
+
+        for step, event_count in (("reviewed", 3), ("closed_test", 4)):
+            body = {
+                "status": step,
+                "note": expected["review_note"],
+                "dedup_key": expected["status_dedup_keys"][step],
+            }
+            code, moved = client.call("POST", "/api/test-records/%s/status" % expected["job_id"], body)
+            code_again, moved_again = client.call("POST", "/api/test-records/%s/status" % expected["job_id"], body)
+            _, current = client.call("GET", "/api/test-records/%s" % expected["job_id"])
+            if (
+                code != 200
+                or moved.get("status") != step
+                or moved.get("deduped") is not False
+                or moved_again.get("deduped") is not True
+                or current.get("status") != step
+                or len(current.get("events", [])) != event_count
+            ):
+                fail("status." + step, "status=%s events=%s code=%s" % (current.get("status"), len(current.get("events", [])), code))
+            add("status." + step, "PASS", "events=%s" % event_count)
+
         score_body = {
             "dedup_key": expected["score_dedup_key"],
             "correlation_id": expected["correlation_id"],
@@ -446,14 +528,33 @@ def main() -> int:
             "evidence_ref": expected["score_evidence_ref"],
             "review_state": "uninitialized",
             "note": expected["score_note"],
+            "synthetic": True,
         }
+        false_score = dict(score_body)
+        false_score["synthetic"] = False
+        false_score["dedup_key"] = "score-not-synthetic"
+        code, rejected_score = client.call("POST", "/api/score-events", false_score)
+        omitted = dict(score_body)
+        omitted.pop("synthetic")
+        omitted["dedup_key"] = "score-omitted-synthetic"
+        code_omitted, _omitted_body = client.call("POST", "/api/score-events", omitted)
+        if code != 400 or rejected_score.get("error") != "validation_failed" or code_omitted != 400:
+            fail("synthetic.rejected", "false=%s omitted=%s" % (code, code_omitted))
+        add("synthetic.rejected", "PASS", "400")
         code, scored = client.call("POST", "/api/score-events", score_body)
         code_again, scored_again = client.call("POST", "/api/score-events", score_body)
-        if code != 201 or scored.get("event_count") != 1 or scored.get("points_state") != "uninitialized":
-            fail("evidence.once", "first score %s count=%s" % (code, scored.get("event_count")))
+        stored_score = (scored.get("events") or [{}])[-1]
+        if (
+            code != 201
+            or scored.get("event_count") != 1
+            or scored.get("points_state") != "uninitialized"
+            or stored_score.get("synthetic") is not True
+            or stored_score.get("points") is not None
+        ):
+            fail("evidence.once", "first score %s synthetic=%s" % (code, stored_score.get("synthetic")))
         if code_again != 200 or scored_again.get("deduped") is not True or scored_again.get("event_count") != 1:
             fail("evidence.once", "replay did not dedupe")
-        add("evidence.once", "PASS", "score_events=1 points_uninitialized")
+        add("evidence.once", "PASS", "score_events=1 synthetic=true points_uninitialized")
 
         code, _ = client.call("DELETE", "/api/test-records/%s" % expected["job_id"])
         if code != 405:
@@ -498,8 +599,12 @@ def main() -> int:
         code_ledger, ledger = client.call("GET", "/api/ledger")
         code_full, full = client.call("GET", "/api/test-records/%s" % expected["job_id"])
         views_match = project(listing["records"][0]) == project(castle["jobs"][0]) == project(ledger["jobs"][0])
-        if not views_match or full["status"] != "in_review" or history_kinds(full) != expected["event_kinds"]:
+        if not views_match or full["status"] != expected["status"] or history_kinds(full) != expected["event_kinds"]:
             fail("refresh.match", "civility, castle, or ledger diverged")
+        if full.get("synthetic") is not True or ledger["jobs"][0].get("synthetic") is not True:
+            fail("refresh.match", "job synthetic flag was not true")
+        if ledger["score_events"][0].get("synthetic") is not True or ledger["score_events"][0].get("points") is not None:
+            fail("refresh.match", "score export was not synthetic or points were set")
         got = observed(ledger, full)
         for key in (
             "jobs",
@@ -556,7 +661,8 @@ def main() -> int:
         code_castle, castle_again = restarted.call("GET", "/api/castle-view")
         code_ledger, ledger = restarted.call("GET", "/api/ledger")
         if (
-            full_again.get("status") != "in_review"
+            full_again.get("status") != expected["status"]
+            or full_again.get("synthetic") is not True
             or history_kinds(full_again) != expected["event_kinds"]
             or project(castle_again["jobs"][0]) != project(full_again)
             or ledger["counts"]["jobs"] != 1
@@ -567,11 +673,19 @@ def main() -> int:
         add("restart.readback", "PASS", "same id, status, history, score, green_walls")
         stop_server(proc)
         db_counts = sqlite_counts(data / "sandbox.sqlite")
-        if db_counts["records"] != 1 or db_counts["events"] != 2 or db_counts["score_events"] != 1:
+        if (
+            db_counts["records"] != 1
+            or db_counts["events"] != expected["history_event_count"]
+            or db_counts["score_events"] != 1
+        ):
             fail("sqlite.counts", json.dumps(db_counts, sort_keys=True))
         if db_counts["billing_rows"] != [{"billing_state": "disabled", "amount_cents": None}]:
             fail("sqlite.counts", "billing row changed")
-        add("sqlite.counts", "PASS", "records=1 events=2 score_events=1")
+        if db_counts["record_synthetic"] != [1] or db_counts["score_rows"] != [{"synthetic": 1, "points": None}]:
+            fail("sqlite.synthetic", "raw synthetic flag was not 1")
+        if any(payload.get("synthetic") is not True for payload in db_counts["score_payloads"]):
+            fail("sqlite.synthetic", "exported score payload was not synthetic")
+        add("sqlite.counts", "PASS", "records=1 events=4 score_events=1 synthetic=1")
 
         verifier = subprocess.run(
             [sys.executable, str(ROOT / "verify_stronghold.py")],
@@ -603,8 +717,13 @@ def main() -> int:
         if secret and secret in log_text:
             fail("log.redaction", "server log contained the secret")
         add("log.redaction", "PASS", "secret not in server log")
-        add("parent.local_run", "BLOCKED", "not a substitute for the parent running this script")
-        add("independent.review", "BLOCKED", "a separate reviewer must check the raw database after the artifact is returned")
+        if declared_environment == "parent_local":
+            add("parent.local_run", "DECLARED", "invoker passed --execution-environment parent_local")
+        elif declared_environment == "cloud_vm_loopback":
+            add("parent.local_run", "NOT_RUN", "invoker passed --execution-environment cloud_vm_loopback")
+        else:
+            add("parent.local_run", "NOT_CLAIMED", "no --execution-environment flag was passed")
+        add("independent.review", "PENDING", "this script does not sign a review")
         outcome = 0
     except StageFailure:
         outcome = 1
@@ -619,13 +738,16 @@ def main() -> int:
         failed.append({"stage": "browser.capture", "outcome": "FAIL", "detail": "browser was marked passed"})
     if failed or outcome:
         overall = "FAILED"
-    elif environment_name() == "cloud_vm_loopback":
-        overall = "API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_BLOCKED"
+    elif declared_environment == "parent_local":
+        overall = "LOCAL_API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_PENDING"
+    elif declared_environment == "cloud_vm_loopback":
+        overall = "API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_PENDING"
     else:
-        overall = "LOCAL_API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_BLOCKED"
+        overall = "API_ONLY_PASSED_BROWSER_SKIPPED_ENVIRONMENT_UNDECLARED_REVIEW_PENDING"
     report = {
         "scenario_id": expected["scenario_id"],
-        "environment": environment_name(),
+        "environment": declared_environment or "unspecified",
+        "environment_source": "invocation_flag" if declared_environment else "not_provided",
         "mode": "api-only",
         "browser": "SKIPPED_NOT_RUN",
         "ui_interaction_tested": False,
@@ -634,10 +756,11 @@ def main() -> int:
         "session_model": "bearer secret file survives restart; no cookie session; caller must present the secret again",
         "original_executable": "NOT_LOCATED",
         "castle_prototype": "NEW-MINIMAL-PROTOTYPE-NOT-ORIGINAL",
-        "independent_review": "BLOCKED",
+        "independent_review": "PENDING",
         "commands": [
             "python3 verify_stronghold.py",
-            "python3 tests/shared_e2e_scenario.py --api-only --output run-output",
+            "python3 tests/shared_e2e_scenario.py --api-only --execution-environment %s --output run-output"
+            % (declared_environment or "<cloud_vm_loopback|parent_local>"),
         ],
         "stages": stages,
     }
@@ -669,6 +792,7 @@ def expected_body(expected: dict) -> dict:
         "purpose": expected["purpose"],
         "package_code": expected["package_code"],
         "note": expected["note"],
+        "synthetic": True,
     }
 
 

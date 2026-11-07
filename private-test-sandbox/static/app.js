@@ -102,7 +102,8 @@
       site_label: form.site_label.value.trim(),
       purpose: form.purpose.value,
       package_code: form.package_code.value,
-      note: form.note.value.trim()
+      note: form.note.value.trim(),
+      synthetic: true
     };
     api("/api/test-records", { method: "POST", body: body }).then(function (row) {
       text("intake-out", JSON.stringify(row, null, 2));
@@ -146,7 +147,8 @@
         subject: "civilitysync-test",
         evidence_ref: "job:" + sharedJob.id.toLowerCase(),
         review_state: "uninitialized",
-        note: "synthetic evidence"
+        note: "synthetic evidence",
+        synthetic: true
       }
     }).then(function (board) {
       text("score-out", JSON.stringify(board, null, 2));
@@ -171,14 +173,25 @@
         heading.textContent = row.id + " " + row.status + " " + row.correlation_id;
         block.appendChild(heading);
         var actions = document.createElement("div");
-        ["in_review", "reviewed", "closed_test", "rejected"].forEach(function (status) {
+        var nextStatus = {
+          received: ["in_review", "rejected"],
+          in_review: ["reviewed", "rejected"],
+          reviewed: ["closed_test"],
+          closed_test: [],
+          rejected: []
+        }[row.status] || [];
+        nextStatus.forEach(function (status) {
           var button = document.createElement("button");
           button.type = "button";
           button.textContent = status;
           button.addEventListener("click", function () {
             api("/api/test-records/" + row.id + "/status", {
               method: "POST",
-              body: { status: status, note: "synthetic review", dedup_key: "status-" + row.idempotency_key }
+              body: {
+                status: status,
+                note: "synthetic review",
+                dedup_key: "status-" + row.idempotency_key + "-" + status
+              }
             }).then(function (updated) {
               text("readback", JSON.stringify(updated, null, 2));
               return refresh();

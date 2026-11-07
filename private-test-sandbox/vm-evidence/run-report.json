@@ -3,13 +3,14 @@
   "castle_prototype": "NEW-MINIMAL-PROTOTYPE-NOT-ORIGINAL",
   "commands": [
     "python3 verify_stronghold.py",
-    "python3 tests/shared_e2e_scenario.py --api-only --output run-output"
+    "python3 tests/shared_e2e_scenario.py --api-only --execution-environment cloud_vm_loopback --output run-output"
   ],
   "environment": "cloud_vm_loopback",
-  "independent_review": "BLOCKED",
+  "environment_source": "invocation_flag",
+  "independent_review": "PENDING",
   "mode": "api-only",
   "original_executable": "NOT_LOCATED",
-  "overall": "API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_BLOCKED",
+  "overall": "API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_PENDING",
   "python": "3.12.3",
   "scenario_id": "shared-e2e-2026-11-07",
   "session_model": "bearer secret file survives restart; no cookie session; caller must present the secret again",
@@ -55,6 +56,11 @@
       "stage": "invalid.identifier"
     },
     {
+      "detail": "400",
+      "outcome": "PASS",
+      "stage": "synthetic.job_rejected"
+    },
+    {
       "detail": "jobs=0",
       "outcome": "PASS",
       "stage": "invalid.stored_nothing"
@@ -85,7 +91,32 @@
       "stage": "replay.review"
     },
     {
-      "detail": "score_events=1 points_uninitialized",
+      "detail": "409 conflict",
+      "outcome": "PASS",
+      "stage": "status.dedup_collision"
+    },
+    {
+      "detail": "409 invalid_transition",
+      "outcome": "PASS",
+      "stage": "status.invalid_transition"
+    },
+    {
+      "detail": "events=3",
+      "outcome": "PASS",
+      "stage": "status.reviewed"
+    },
+    {
+      "detail": "events=4",
+      "outcome": "PASS",
+      "stage": "status.closed_test"
+    },
+    {
+      "detail": "400",
+      "outcome": "PASS",
+      "stage": "synthetic.rejected"
+    },
+    {
+      "detail": "score_events=1 synthetic=true points_uninitialized",
       "outcome": "PASS",
       "stage": "evidence.once"
     },
@@ -130,7 +161,7 @@
       "stage": "restart.readback"
     },
     {
-      "detail": "records=1 events=2 score_events=1",
+      "detail": "records=1 events=4 score_events=1 synthetic=1",
       "outcome": "PASS",
       "stage": "sqlite.counts"
     },
@@ -155,13 +186,13 @@
       "stage": "log.redaction"
     },
     {
-      "detail": "not a substitute for the parent running this script",
-      "outcome": "BLOCKED",
+      "detail": "invoker passed --execution-environment cloud_vm_loopback",
+      "outcome": "NOT_RUN",
       "stage": "parent.local_run"
     },
     {
-      "detail": "a separate reviewer must check the raw database after the artifact is returned",
-      "outcome": "BLOCKED",
+      "detail": "this script does not sign a review",
+      "outcome": "PENDING",
       "stage": "independent.review"
     }
   ],

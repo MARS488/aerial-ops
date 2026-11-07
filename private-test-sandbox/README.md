@@ -17,7 +17,7 @@ From this directory:
 
 ```sh
 python3 verify_stronghold.py
-python3 tests/shared_e2e_scenario.py --api-only --output run-output
+python3 tests/shared_e2e_scenario.py --api-only --execution-environment parent_local --output run-output
 ```
 
 `--skip-browser` is the same run. So is omitting the mode flag. The default is API-only. The command does not start Chrome, and it does not skip the API, restart, dedupe, database, or auth checks. `tests/browser_capture.py` is not called. Running that file directly prints `SKIPPED_NOT_RUN` and exits 2.
@@ -30,8 +30,9 @@ The scenario is deterministic. It uses one synthetic job:
 | Idempotency key | `idem-synthetic-job-0001` |
 | Site label | `SYNTHETIC-JOB-0001` |
 | Job id | `TS-0001` |
-| Status after review | `in_review` |
-| History events | 2: `record.created`, `record.status` |
+| Status after the allowed path | `closed_test` (`received` to `in_review` to `reviewed` to `closed_test`) |
+| History events | 4: `record.created`, then three `record.status` events |
+| Synthetic flags | job and evidence stored as synthetic; points stay unset |
 | Score events | 1, points left uninitialized |
 | Jobs after replay | 1 |
 | Green compliance walls | 0 |
@@ -41,8 +42,9 @@ Those counts live in `tests/expected-counts.json`. The script fails if the run d
 
 The script's overall line is not an independent review:
 
-- `API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_BLOCKED` means the cloud VM API stages passed. Browser interaction was not run. Review is still blocked.
-- `LOCAL_API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_BLOCKED` means this computer's API stages passed. Browser interaction was not run, and a separate reviewer has not signed.
+- `API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_PENDING` means the API stages passed under `--execution-environment cloud_vm_loopback`. Browser interaction was not run. Independent review is still pending.
+- `LOCAL_API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_PENDING` means the API stages passed under `--execution-environment parent_local`. That flag records the invoker's declaration. It is not an independent review signature.
+- `API_ONLY_PASSED_BROWSER_SKIPPED_ENVIRONMENT_UNDECLARED_REVIEW_PENDING` means the API stages passed and no environment flag was passed, so the run claims neither machine.
 - `FAILED` means an API, restart, dedupe, database, or auth stage did not match. Read `run-output/run-report.md`. Do not treat a failed run as success.
 
 `browser.capture` is `SKIPPED_NOT_RUN` on every successful shell run. That value is not a pass, and it does not mean the page was clicked through.
@@ -97,11 +99,15 @@ sqlite3 vm-evidence/sandbox.sqlite "SELECT dedup_key, points, review_state FROM 
 Expected rows:
 
 ```text
-TS-0001|in_review|CORR-SYNTHETIC-JOB-0001|idem-synthetic-job-0001|disabled|
+TS-0001|closed_test|CORR-SYNTHETIC-JOB-0001|idem-synthetic-job-0001|disabled|
 record.created|create:idem-synthetic-job-0001
-record.status|status-idem-synthetic-job-0001
+record.status|status-idem-synthetic-job-0001-in_review
+record.status|status-idem-synthetic-job-0001-reviewed
+record.status|status-idem-synthetic-job-0001-closed_test
 score-idem-synthetic-job-0001||uninitialized
 ```
+
+`synthetic` is `1` on the job row and the evidence row. Points and amount are NULL. Add `synthetic` to the SQLite select when you want to see the flag.
 
 The empty amount and empty points are SQL NULL, not zero.
 
@@ -126,7 +132,7 @@ sha256sum -c SHA256SUMS.source
 
 ## Cloud VM evidence for this archive
 
-`vm-evidence/` is an API-only loopback run. Its overall line is `API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_BLOCKED`. It does not include browser screenshots, and it does not claim the page was driven.
+`vm-evidence/` is an API-only cloud loopback run with `--execution-environment cloud_vm_loopback`. Its overall line is `API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_PENDING`. `parent.local_run` is `NOT_RUN` on that evidence. It does not include browser screenshots, and it does not claim the page was driven. Passing it does not sign `independent.review`; that stage stays `PENDING`.
 
 The previous package blocked a local shell preflight because the scenario always launched Chrome. See `CHANGELOG.md`.
 

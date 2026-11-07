@@ -49,6 +49,7 @@ CREATE_KEYS = {
     "idempotency_key",
     "correlation_id",
     "note",
+    "synthetic",
 }
 STATUS_KEYS = {"status", "note", "dedup_key"}
 SCORE_KEYS = {
@@ -214,6 +215,7 @@ class Store:
               idempotency_key TEXT NOT NULL UNIQUE,
               correlation_id TEXT NOT NULL UNIQUE,
               note TEXT NOT NULL,
+              synthetic INTEGER NOT NULL CHECK (synthetic = 1),
               billing_state TEXT NOT NULL,
               amount_cents INTEGER,
               created_at TEXT NOT NULL,
@@ -243,7 +245,7 @@ class Store:
             """
         )
         self.conn.execute(
-            "INSERT INTO meta(k, v) VALUES('schema', '2') "
+            "INSERT INTO meta(k, v) VALUES('schema', '3') "
             "ON CONFLICT(k) DO UPDATE SET v = excluded.v"
         )
         self.conn.commit()
@@ -295,9 +297,9 @@ class Store:
                 """
                 INSERT INTO records (
                   id, site_label, purpose, package_code, status,
-                  idempotency_key, correlation_id, note, billing_state,
-                  amount_cents, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, 'received', ?, ?, ?, 'disabled', NULL, ?, ?)
+                  idempotency_key, correlation_id, note, synthetic,
+                  billing_state, amount_cents, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, 'received', ?, ?, ?, 1, 'disabled', NULL, ?, ?)
                 """,
                 (
                     record_id,
@@ -393,11 +395,12 @@ class Store:
                         payload = self._record_payload(fresh, deduped=True)
                         return 200, payload
                     self.conn.rollback()
-                    return 409, {"error": "conflict"}
+                    return 409, {"error": "conflict", "reason": "dedup_collision"}
             if target not in TRANSITIONS.get(row["status"], set()):
                 self.conn.rollback()
                 return 409, {
                     "error": "invalid_transition",
+                    "reason": "invalid_transition",
                     "from": row["status"],
                     "to": target,
                 }
@@ -413,7 +416,12 @@ class Store:
                 record_id,
                 "record.status",
                 dedup_key,
-                {"from": row["status"], "to": target, "note": note},
+                {
+                    "from": row["status"],
+                    "to": target,
+                    "note": note,
+                    "synthetic": True,
+                },
                 now,
             )
             self.conn.commit()
@@ -426,7 +434,7 @@ class Store:
             "evidence_ref": body["evidence_ref"],
             "review_state": body["review_state"],
             "points": body.get("points", None),
-            "synthetic": bool(body.get("synthetic", False)),
+            "synthetic": True,
             "note": body.get("note") or "",
         }
         with self.lock:
@@ -466,7 +474,7 @@ class Store:
                     canonical["evidence_ref"],
                     canonical["review_state"],
                     canonical["points"],
-                    1 if canonical["synthetic"] else 0,
+                    1,
                     canonical["note"],
                     json.dumps(canonical, sort_keys=True),
                     now,
@@ -546,6 +554,7 @@ class Store:
                 "package_code": job["package_code"],
                 "status": job["status"],
                 "note": job["note"],
+                "synthetic": job["synthetic"],
                 "billing_state": job["billing_state"],
                 "amount_cents": job["amount_cents"],
                 "invoice": job["invoice"],
@@ -649,6 +658,7 @@ class Store:
             "package_code": row["package_code"],
             "status": row["status"],
             "note": row["note"],
+            "synthetic": row["synthetic"] == 1,
             "billing_state": "disabled",
             "amount_cents": None,
             "invoice": None,
@@ -667,7 +677,7 @@ class Store:
 def validate_create(body: dict[str, Any]) -> Optional[dict[str, str]]:
     extra = set(body) - CREATE_KEYS
     if extra:
-        return {"body": "only site_label, purpose, package_code, idempotency_key, correlation_id, and note are accepted"}
+        return {"body": "only site_label, purpose, package_code, idempotency_key, correlation_id, note, and synthetic are accepted"}
     missing = {
         "site_label",
         "purpose",
@@ -698,6 +708,8 @@ def validate_create(body: dict[str, Any]) -> Optional[dict[str, str]]:
         note = ""
     if not isinstance(note, str) or not NOTE_RE.fullmatch(note) or looks_like_identifier(note):
         errors["note"] = "notes cannot contain contact details or addresses"
+    if body.get("synthetic") is not True:
+        errors["synthetic"] = "this sandbox stores synthetic jobs only"
     for key in ("site_label", "purpose", "package_code", "idempotency_key", "correlation_id"):
         value = body.get(key)
         if isinstance(value, str) and looks_like_identifier(value):
@@ -747,9 +759,10 @@ def validate_score(body: dict[str, Any]) -> Optional[dict[str, str]]:
         note = ""
     if not isinstance(note, str) or not NOTE_RE.fullmatch(note) or looks_like_identifier(note):
         return {"note": "notes cannot contain contact details or addresses"}
+    if body.get("synthetic") is not True:
+        return {"synthetic": "evidence in this sandbox must be marked synthetic"}
     points = body.get("points", None)
     review = body["review_state"]
-    synthetic = body.get("synthetic", False)
     if points is None:
         if review != "uninitialized":
             return {"review_state": "omit points to keep the score uninitialized"}
@@ -758,7 +771,7 @@ def validate_score(body: dict[str, Any]) -> Optional[dict[str, str]]:
         return {"points": "points must be a whole number or omitted"}
     if points < 0 or points > 100:
         return {"points": "points must be from 0 through 100"}
-    if synthetic is not True or review != "synthetic_recorded":
+    if review != "synthetic_recorded":
         return {"points": "points are accepted only on an explicit synthetic test event"}
     return None
 

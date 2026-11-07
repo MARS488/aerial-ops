@@ -5,7 +5,27 @@
       "billing_state": "disabled"
     }
   ],
-  "events": 2,
+  "events": 4,
+  "record_synthetic": [
+    1
+  ],
   "records": 1,
-  "score_events": 1
+  "score_events": 1,
+  "score_payloads": [
+    {
+      "correlation_id": "CORR-SYNTHETIC-JOB-0001",
+      "evidence_ref": "job:ts-0001",
+      "note": "synthetic evidence",
+      "points": null,
+      "review_state": "uninitialized",
+      "subject": "civilitysync-test",
+      "synthetic": true
+    }
+  ],
+  "score_rows": [
+    {
+      "points": null,
+      "synthetic": 1
+    }
+  ]
 }
