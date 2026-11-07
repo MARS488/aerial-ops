@@ -1,0 +1,130 @@
+{
+  "compliance": {
+    "all_evidence_verdicts": "UNVERIFIED",
+    "green_walls": 0,
+    "preserved_counts": {
+      "Built": 2,
+      "In progress": 2,
+      "Not started": 15
+    },
+    "proof_is_completion": false
+  },
+  "counts": {
+    "event_kinds": [
+      "record.created",
+      "record.status",
+      "record.status",
+      "record.status"
+    ],
+    "green_walls": 0,
+    "history_event_count": 4,
+    "jobs": 1,
+    "points_state": "uninitialized",
+    "preserved_counts": {
+      "Built": 2,
+      "In progress": 2,
+      "Not started": 15
+    },
+    "score_event_count": 1,
+    "synthetic_points_sum": null
+  },
+  "events": [
+    {
+      "created_at": "2026-11-07T15:34:27Z",
+      "dedup_key": "create:idem-synthetic-job-0001",
+      "kind": "record.created",
+      "payload": {
+        "amount_cents": null,
+        "billing_state": "disabled",
+        "correlation_id": "CORR-SYNTHETIC-JOB-0001",
+        "created_at": "2026-11-07T15:34:27Z",
+        "id": "TS-0001",
+        "idempotency_key": "idem-synthetic-job-0001",
+        "invoice": null,
+        "note": "synthetic shared scenario",
+        "package_code": "quick_look",
+        "purpose": "general_assessment",
+        "site_label": "SYNTHETIC-JOB-0001",
+        "status": "received",
+        "synthetic": true,
+        "updated_at": "2026-11-07T15:34:27Z"
+      },
+      "record_id": "TS-0001",
+      "seq": 1
+    },
+    {
+      "created_at": "2026-11-07T15:34:27Z",
+      "dedup_key": "status-idem-synthetic-job-0001-in_review",
+      "kind": "record.status",
+      "payload": {
+        "from": "received",
+        "note": "synthetic review",
+        "synthetic": true,
+        "to": "in_review"
+      },
+      "record_id": "TS-0001",
+      "seq": 2
+    },
+    {
+      "created_at": "2026-11-07T15:34:27Z",
+      "dedup_key": "status-idem-synthetic-job-0001-reviewed",
+      "kind": "record.status",
+      "payload": {
+        "from": "in_review",
+        "note": "synthetic review",
+        "synthetic": true,
+        "to": "reviewed"
+      },
+      "record_id": "TS-0001",
+      "seq": 3
+    },
+    {
+      "created_at": "2026-11-07T15:34:27Z",
+      "dedup_key": "status-idem-synthetic-job-0001-closed_test",
+      "kind": "record.status",
+      "payload": {
+        "from": "reviewed",
+        "note": "synthetic review",
+        "synthetic": true,
+        "to": "closed_test"
+      },
+      "record_id": "TS-0001",
+      "seq": 4
+    }
+  ],
+  "jobs": [
+    {
+      "amount_cents": null,
+      "billing_state": "disabled",
+      "correlation_id": "CORR-SYNTHETIC-JOB-0001",
+      "created_at": "2026-11-07T15:34:27Z",
+      "id": "TS-0001",
+      "idempotency_key": "idem-synthetic-job-0001",
+      "invoice": null,
+      "note": "synthetic shared scenario",
+      "package_code": "quick_look",
+      "purpose": "general_assessment",
+      "site_label": "SYNTHETIC-JOB-0001",
+      "status": "closed_test",
+      "synthetic": true,
+      "updated_at": "2026-11-07T15:34:27Z"
+    }
+  ],
+  "schema": "private-sandbox-ledger-1",
+  "score_events": [
+    {
+      "correlation_id": "CORR-SYNTHETIC-JOB-0001",
+      "created_at": "2026-11-07T15:34:27Z",
+      "dedup_key": "score-idem-synthetic-job-0001",
+      "evidence_ref": "job:ts-0001",
+      "note": "synthetic evidence",
+      "points": null,
+      "review_state": "uninitialized",
+      "seq": 1,
+      "subject": "civilitysync-test",
+      "synthetic": true
+    }
+  ],
+  "separate_job_copy": false,
+  "store": "shared_sqlite"
+}

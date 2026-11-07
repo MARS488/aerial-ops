@@ -1,0 +1,200 @@
+{
+  "browser": "SKIPPED_NOT_RUN",
+  "castle_prototype": "NEW-MINIMAL-PROTOTYPE-NOT-ORIGINAL",
+  "commands": [
+    "python3 verify_stronghold.py",
+    "python3 tests/shared_e2e_scenario.py --api-only --execution-environment cloud_vm_loopback --output run-output"
+  ],
+  "environment": "cloud_vm_loopback",
+  "environment_source": "invocation_flag",
+  "independent_review": "PENDING",
+  "mode": "api-only",
+  "original_executable": "NOT_LOCATED",
+  "overall": "API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_PENDING",
+  "python": "3.12.3",
+  "scenario_id": "shared-e2e-2026-11-07",
+  "session_model": "bearer secret file survives restart; no cookie session; caller must present the secret again",
+  "stages": [
+    {
+      "detail": "ready on 127.0.0.1",
+      "outcome": "PASS",
+      "stage": "health"
+    },
+    {
+      "detail": "401",
+      "outcome": "PASS",
+      "stage": "auth.missing"
+    },
+    {
+      "detail": "401",
+      "outcome": "PASS",
+      "stage": "auth.bad_secret"
+    },
+    {
+      "detail": "401",
+      "outcome": "PASS",
+      "stage": "auth.bad_account"
+    },
+    {
+      "detail": "403",
+      "outcome": "PASS",
+      "stage": "origin.rejected"
+    },
+    {
+      "detail": "400",
+      "outcome": "PASS",
+      "stage": "invalid.address"
+    },
+    {
+      "detail": "400",
+      "outcome": "PASS",
+      "stage": "invalid.price"
+    },
+    {
+      "detail": "400",
+      "outcome": "PASS",
+      "stage": "invalid.identifier"
+    },
+    {
+      "detail": "400",
+      "outcome": "PASS",
+      "stage": "synthetic.job_rejected"
+    },
+    {
+      "detail": "jobs=0",
+      "outcome": "PASS",
+      "stage": "invalid.stored_nothing"
+    },
+    {
+      "detail": "TS-0001",
+      "outcome": "PASS",
+      "stage": "valid.intake"
+    },
+    {
+      "detail": "jobs=1",
+      "outcome": "PASS",
+      "stage": "replay.intake"
+    },
+    {
+      "detail": "shared record at received",
+      "outcome": "PASS",
+      "stage": "castle.same_job"
+    },
+    {
+      "detail": "in_review",
+      "outcome": "PASS",
+      "stage": "review.stage"
+    },
+    {
+      "detail": "events=2 paid_rejected",
+      "outcome": "PASS",
+      "stage": "replay.review"
+    },
+    {
+      "detail": "409 conflict",
+      "outcome": "PASS",
+      "stage": "status.dedup_collision"
+    },
+    {
+      "detail": "409 invalid_transition",
+      "outcome": "PASS",
+      "stage": "status.invalid_transition"
+    },
+    {
+      "detail": "events=3",
+      "outcome": "PASS",
+      "stage": "status.reviewed"
+    },
+    {
+      "detail": "events=4",
+      "outcome": "PASS",
+      "stage": "status.closed_test"
+    },
+    {
+      "detail": "400",
+      "outcome": "PASS",
+      "stage": "synthetic.rejected"
+    },
+    {
+      "detail": "score_events=1 synthetic=true points_uninitialized",
+      "outcome": "PASS",
+      "stage": "evidence.once"
+    },
+    {
+      "detail": "405",
+      "outcome": "PASS",
+      "stage": "delete.rejected"
+    },
+    {
+      "detail": "404",
+      "outcome": "PASS",
+      "stage": "invoice.absent"
+    },
+    {
+      "detail": "405",
+      "outcome": "PASS",
+      "stage": "fixture.readonly"
+    },
+    {
+      "detail": "green_walls=0 preserved 2/2/15",
+      "outcome": "PASS",
+      "stage": "compliance.not_green"
+    },
+    {
+      "detail": "one job, same three reads",
+      "outcome": "PASS",
+      "stage": "refresh.match"
+    },
+    {
+      "detail": "127.0.0.1 only",
+      "outcome": "PASS",
+      "stage": "bind.loopback"
+    },
+    {
+      "detail": "401 until secret is presented again",
+      "outcome": "PASS",
+      "stage": "restart.reauth"
+    },
+    {
+      "detail": "same id, status, history, score, green_walls",
+      "outcome": "PASS",
+      "stage": "restart.readback"
+    },
+    {
+      "detail": "records=1 events=4 score_events=1 synthetic=1",
+      "outcome": "PASS",
+      "stage": "sqlite.counts"
+    },
+    {
+      "detail": "expected; new castle is not the Nov 6 sketch",
+      "outcome": "NOT_LOCATED",
+      "stage": "original.lookup"
+    },
+    {
+      "detail": "exit 1",
+      "outcome": "PASS",
+      "stage": "bind.refusal"
+    },
+    {
+      "detail": "api-only; Chrome was not started and UI interaction was not tested",
+      "outcome": "SKIPPED_NOT_RUN",
+      "stage": "browser.capture"
+    },
+    {
+      "detail": "secret not in server log",
+      "outcome": "PASS",
+      "stage": "log.redaction"
+    },
+    {
+      "detail": "invoker passed --execution-environment cloud_vm_loopback",
+      "outcome": "NOT_RUN",
+      "stage": "parent.local_run"
+    },
+    {
+      "detail": "this script does not sign a review",
+      "outcome": "PENDING",
+      "stage": "independent.review"
+    }
+  ],
+  "ui_interaction_tested": false
+}

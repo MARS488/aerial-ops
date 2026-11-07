@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CivilitySync preview</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <p id="disclaimer" class="disclaimer">Pre-release prototype • Fictional data • Not accepting operational customers</p>
+
+  <section id="gate" class="gate">
+    <div class="sheet narrow">
+      <p class="eyebrow">Private preview</p>
+      <h1>Open this preview</h1>
+      <p class="lede">This computer keeps the access secret in a local file. Enter it once. It is not shown again on the preview.</p>
+      <label for="token">Local access secret</label>
+      <input id="token" type="password" autocomplete="off" spellcheck="false">
+      <button id="unlock" type="button">Continue</button>
+      <p id="auth-msg" class="hint" role="status"></p>
+    </div>
+  </section>
+
+  <main id="client" class="sheet" hidden>
+    <div class="stage">
+    <div>
+    <p id="chapter" class="chapter">Save a fictional job so you can follow it.</p>
+    <header class="mast">
+      <p class="eyebrow">CivilitySync</p>
+      <h1>Follow one fictional job</h1>
+      <p class="lede">See a made-up job move through review, then find that same job on the sample castle. This does not accept customers.</p>
+    </header>
+
+    <section class="card" id="create-card" aria-labelledby="create-heading">
+      <h2 id="create-heading">Fictional job</h2>
+      <form id="create-form">
+        <label for="job-name">Job name</label>
+        <input id="job-name" value="DEMO-JOB-001" readonly>
+        <label for="purpose">What the sample represents</label>
+        <select id="purpose">
+          <option value="general_assessment">A sample property look</option>
+          <option value="storm_documentation">A sample storm record</option>
+        </select>
+        <label for="package">Sample scope</label>
+        <select id="package">
+          <option value="quick_look">Short look</option>
+          <option value="full_assessment">Fuller sample</option>
+          <option value="seasonal_plan">Repeat sample</option>
+        </select>
+        <p class="hint">These scope names are sample labels. They are not a price list.</p>
+        <button id="create-job" type="submit">Save fictional job</button>
+      </form>
+    </section>
+
+    <section class="card" id="job-card" hidden aria-labelledby="job-heading">
+      <h2 id="job-heading">Saved job</h2>
+      <p id="job-title" class="job-title">DEMO-JOB-001</p>
+      <ol id="rail" class="rail" aria-label="Fictional test steps">
+        <li data-step="received">Received</li>
+        <li data-step="in_review">In review</li>
+        <li data-step="reviewed">Reviewed</li>
+        <li data-step="closed_test">Closed test</li>
+      </ol>
+      <p id="job-status" class="status">Received</p>
+      <p id="job-note" class="hint">This is the same record the sample castle reads.</p>
+      <button id="advance" type="button">Mark in review</button>
+      <button id="show-castle" type="button" class="secondary">Show the sample castle</button>
+      <button id="record-evidence" type="button" class="secondary" hidden>Record fictional evidence</button>
+      <p id="evidence-note" class="hint" hidden></p>
+    </section>
+
+    </div>
+    <div>
+    <section class="card" id="castle" aria-labelledby="castle-heading">
+      <h2 id="castle-heading">Sample castle</h2>
+      <p class="hint">Sample visualization. This is not an earlier sketch. That source was not located.</p>
+      <canvas id="yard" width="960" height="420" aria-label="Sample castle with unverified checks"></canvas>
+      <p id="shared-line" class="status">No fictional job saved yet</p>
+      <p id="verified-count" class="status">Verified segments: 0</p>
+      <p class="hint">All sample checks stay unverified. A saved job does not turn them green.</p>
+    </section>
+
+    <section class="card" id="limits" aria-labelledby="limits-heading">
+      <h2 id="limits-heading">What this preview shows</h2>
+      <ul>
+        <li>A fictional job can be saved on this computer.</li>
+        <li>That job can be marked in review, reviewed, and closed as a test.</li>
+        <li>The sample castle reads the same saved job.</li>
+        <li>Fictional evidence stays unverified, and no points are added.</li>
+      </ul>
+      <h2>What it is not connected to</h2>
+      <ul>
+        <li>No booking, payment, filing, or messages.</li>
+        <li>No outside service and no public website.</li>
+        <li>No claim that a business, certificate, or filing is complete.</li>
+      </ul>
+    </section>
+    </div>
+    </div>
+  </main>
+
+  <footer class="sheet foot">
+    <p>Pre-release prototype • Fictional data • Not accepting operational customers</p>
+  </footer>
+  <script src="/app.js"></script>
+</body>
+</html>

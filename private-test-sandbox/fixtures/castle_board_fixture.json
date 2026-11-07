@@ -1,0 +1,31 @@
+{
+  "fixture_kind": "TEST_UNVERIFIED_COPY",
+  "not_a_live_connection": true,
+  "audit_label": "UNVERIFIED / TESTS PENDING",
+  "audit_timestamp": "2026-11-07 9:41:21 AM EST",
+  "gap_matrix_url": "https://app.notion.com/p/4113d5110c4781f591eddc431a0ae848",
+  "proof_url_meaning": "Every proof_url points at the gap matrix. A nonempty proof URL is not completion and must not paint a wall green.",
+  "preserved_counts": {"Built": 2, "In progress": 2, "Not started": 15},
+  "opening_balance": "UNKNOWN",
+  "rows": [
+    {"order": 1, "title": "Keep: LLC Active (GA SOS)", "preserved_status": "Built", "kind": "legal_or_certificate_label"},
+    {"order": 2, "title": "Part 107 certificate", "preserved_status": "Built", "kind": "legal_or_certificate_label"},
+    {"order": 3, "title": "Trade name filed (Lowndes Clerk)", "preserved_status": "Not started", "kind": "board_row"},
+    {"order": 4, "title": "Newspaper notice (2 weeks)", "preserved_status": "Not started", "kind": "board_row"},
+    {"order": 5, "title": "County occupational tax certificate", "preserved_status": "Not started", "kind": "board_row"},
+    {"order": 6, "title": "GA sales tax registration", "preserved_status": "Not started", "kind": "board_row"},
+    {"order": 7, "title": "Insurance settled (SkyWatch or annual)", "preserved_status": "In progress", "kind": "board_row"},
+    {"order": 10, "title": "Mission 1: Build the walls", "preserved_status": "In progress", "kind": "mission"},
+    {"order": 11, "title": "Mission 2: First siege won (first paid outside job)", "preserved_status": "Not started", "kind": "mission"},
+    {"order": 12, "title": "Mission 3: Hold the walls (yearly upkeep)", "preserved_status": "Not started", "kind": "mission"},
+    {"order": 13, "title": "Mission 4: Feed the castle (3 steady accounts)", "preserved_status": "Not started", "kind": "mission"},
+    {"order": 14, "title": "Mission 5: Raise an army (contract pilots)", "preserved_status": "Not started", "kind": "mission"},
+    {"order": 15, "title": "Mission 6: Expand the territory", "preserved_status": "Not started", "kind": "mission"},
+    {"order": 16, "title": "Mission 7: Fill the treasury (S-corp talk at $40–60K)", "preserved_status": "Not started", "kind": "mission"},
+    {"order": 20, "title": "Estimated tax Q4 2026 (1040-ES + GA 500-ES)", "preserved_status": "Not started", "kind": "board_row"},
+    {"order": 21, "title": "1099-NEC to contractors (if any)", "preserved_status": "Not started", "kind": "board_row"},
+    {"order": 22, "title": "GA annual LLC registration", "preserved_status": "Not started", "kind": "board_row"},
+    {"order": 23, "title": "2026 tax return", "preserved_status": "Not started", "kind": "board_row"},
+    {"order": 30, "title": "Treasury: opening balance", "preserved_status": "Not started", "kind": "treasury"}
+  ]
+}

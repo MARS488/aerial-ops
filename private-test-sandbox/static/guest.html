@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fictional preview entrance</title>
+  <link rel="stylesheet" href="/guest.css">
+</head>
+<body>
+  <p class="disclaimer">Pre-release prototype • Fictional data • Not accepting operational customers</p>
+  <main class="sheet">
+    <p class="eyebrow">Personal entrance</p>
+    <h1>A fictional sandbox for one guest</h1>
+    <p id="gate-note" class="lede">Checking whether this entrance is on.</p>
+    <form id="enter" hidden>
+      <label for="guest-id">Guest id</label>
+      <input id="guest-id" autocomplete="off">
+      <label for="guest-code">Personal code</label>
+      <input id="guest-code" type="password" autocomplete="off">
+      <button type="submit">Enter</button>
+      <p id="enter-msg" class="hint" role="status"></p>
+    </form>
+    <section id="work" hidden>
+      <h2>Your fictional jobs</h2>
+      <p id="job-list" class="hint">None yet.</p>
+      <form id="make">
+        <label for="site">Fictional label</label>
+        <input id="site" value="SYNTHETIC-DEMO-GUEST">
+        <button type="submit">Save a fictional job</button>
+      </form>
+      <p class="hint">This entrance cannot book, pay, file, or message anyone. Sample checks stay unverified.</p>
+    </section>
+  </main>
+  <script src="/guest.js"></script>
+</body>
+</html>

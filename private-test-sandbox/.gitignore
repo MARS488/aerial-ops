@@ -1,0 +1,11 @@
+data/
+run-output/
+__pycache__/
+*.pyc
+*.token
+chrome-profile/
+test-run/
+browser-profile/
+cloud-capture/
+run-output-guests/
+run-output-proxy/
