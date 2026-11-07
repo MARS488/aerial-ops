@@ -30,14 +30,14 @@
   },
   "events": [
     {
-      "created_at": "2026-11-07T15:11:57Z",
+      "created_at": "2026-11-07T15:34:27Z",
       "dedup_key": "create:idem-synthetic-job-0001",
       "kind": "record.created",
       "payload": {
         "amount_cents": null,
         "billing_state": "disabled",
         "correlation_id": "CORR-SYNTHETIC-JOB-0001",
-        "created_at": "2026-11-07T15:11:57Z",
+        "created_at": "2026-11-07T15:34:27Z",
         "id": "TS-0001",
         "idempotency_key": "idem-synthetic-job-0001",
         "invoice": null,
@@ -47,13 +47,13 @@
         "site_label": "SYNTHETIC-JOB-0001",
         "status": "received",
         "synthetic": true,
-        "updated_at": "2026-11-07T15:11:57Z"
+        "updated_at": "2026-11-07T15:34:27Z"
       },
       "record_id": "TS-0001",
       "seq": 1
     },
     {
-      "created_at": "2026-11-07T15:11:57Z",
+      "created_at": "2026-11-07T15:34:27Z",
       "dedup_key": "status-idem-synthetic-job-0001-in_review",
       "kind": "record.status",
       "payload": {
@@ -66,7 +66,7 @@
       "seq": 2
     },
     {
-      "created_at": "2026-11-07T15:11:57Z",
+      "created_at": "2026-11-07T15:34:27Z",
       "dedup_key": "status-idem-synthetic-job-0001-reviewed",
       "kind": "record.status",
       "payload": {
@@ -79,7 +79,7 @@
       "seq": 3
     },
     {
-      "created_at": "2026-11-07T15:11:57Z",
+      "created_at": "2026-11-07T15:34:27Z",
       "dedup_key": "status-idem-synthetic-job-0001-closed_test",
       "kind": "record.status",
       "payload": {
@@ -97,7 +97,7 @@
       "amount_cents": null,
       "billing_state": "disabled",
       "correlation_id": "CORR-SYNTHETIC-JOB-0001",
-      "created_at": "2026-11-07T15:11:57Z",
+      "created_at": "2026-11-07T15:34:27Z",
       "id": "TS-0001",
       "idempotency_key": "idem-synthetic-job-0001",
       "invoice": null,
@@ -107,14 +107,14 @@
       "site_label": "SYNTHETIC-JOB-0001",
       "status": "closed_test",
       "synthetic": true,
-      "updated_at": "2026-11-07T15:11:57Z"
+      "updated_at": "2026-11-07T15:34:27Z"
     }
   ],
   "schema": "private-sandbox-ledger-1",
   "score_events": [
     {
       "correlation_id": "CORR-SYNTHETIC-JOB-0001",
-      "created_at": "2026-11-07T15:11:57Z",
+      "created_at": "2026-11-07T15:34:27Z",
       "dedup_key": "score-idem-synthetic-job-0001",
       "evidence_ref": "job:ts-0001",
       "note": "synthetic evidence",

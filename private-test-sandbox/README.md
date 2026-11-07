@@ -11,6 +11,12 @@ This is not the public website. It listens on `127.0.0.1` only. The original Nov
 - No Base44, Notion, Dropbox, Stripe, Monday, GitHub Pages, or other account.
 - A computer you already have. This package does not sign you up for hosting.
 
+## Client preview
+
+`python3 server.py` then open `http://127.0.0.1:8765/` on that computer. The first screen asks for the local secret and does not print it. After that, the page is a fictional job named `DEMO-JOB-001`. It can be saved, marked in review, shown on the sample castle, marked reviewed, and closed as a test. Sample checks stay unverified. The banner reads: Pre-release prototype • Fictional data • Not accepting operational customers.
+
+The guest entrance at `/guest.html` stays off unless `SANDBOX_HOSTED=1`, and even then the process still binds only `127.0.0.1`. See `HOSTING_READINESS.md`. Nothing has been deployed.
+
 ## Run the shared scenario
 
 From this directory:

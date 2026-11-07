@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import hosted_preview
 import os
 import re
 import secrets
@@ -83,6 +84,9 @@ STATIC_FILES = {
     "/index.html": ("index.html", "text/html; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/app.css": ("app.css", "text/css; charset=utf-8"),
+    "/guest.html": ("guest.html", "text/html; charset=utf-8"),
+    "/guest.js": ("guest.js", "text/javascript; charset=utf-8"),
+    "/guest.css": ("guest.css", "text/css; charset=utf-8"),
 }
 
 
@@ -197,7 +201,9 @@ class Store:
         self.lock = threading.Lock()
         self.conn.execute("PRAGMA journal_mode=WAL")
         self.conn.execute("PRAGMA foreign_keys=ON")
+        self.conn.execute("PRAGMA busy_timeout=5000")
         self._init()
+        self.guest_book = hosted_preview.GuestBook(self.conn, self.lock, path.parent)
 
     def _init(self) -> None:
         self.conn.executescript(
@@ -864,6 +870,15 @@ class Handler(BaseHTTPRequestHandler):
         if not path.startswith("/api/"):
             self._send(404, {"error": "not_found"})
             return
+        if path.startswith("/api/guest"):
+            if not getattr(self.server, "hosted", False):
+                self._send(404, {"error": "not_found"})
+                return
+            if not self._origin_ok():
+                self._send(403, {"error": "forbidden"})
+                return
+            hosted_preview.dispatch(self, method, path)
+            return
         if not self._origin_ok():
             self._send(403, {"error": "forbidden"})
             return
@@ -939,6 +954,8 @@ class Handler(BaseHTTPRequestHandler):
                 "castle_prototype": "NEW-MINIMAL-PROTOTYPE-NOT-ORIGINAL",
                 "notion_connected": False,
                 "base44": False,
+                "hosted": bool(getattr(self.server, "hosted", False)),
+                "public_bind_enabled": False,
             },
         )
 
@@ -1061,17 +1078,30 @@ class Handler(BaseHTTPRequestHandler):
         body = file_path.read_bytes()
         self._bytes(200, body, content_type)
 
-    def _send(self, status: int, payload: dict[str, Any]) -> None:
+    def _send(
+        self,
+        status: int,
+        payload: dict[str, Any],
+        extra_headers: Optional[list[tuple[str, str]]] = None,
+    ) -> None:
         body = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-        self._bytes(status, body, "application/json; charset=utf-8")
+        self._bytes(status, body, "application/json; charset=utf-8", extra_headers)
 
-    def _bytes(self, status: int, body: bytes, content_type: str) -> None:
+    def _bytes(
+        self,
+        status: int,
+        body: bytes,
+        content_type: str,
+        extra_headers: Optional[list[tuple[str, str]]] = None,
+    ) -> None:
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
+        for name, value in extra_headers or []:
+            self.send_header(name, value)
         self.send_header(
             "Content-Security-Policy",
             "default-src 'self'; script-src 'self'; style-src 'self'; "
@@ -1086,7 +1116,8 @@ def serve() -> None:
     requested = os.environ.get("SANDBOX_BIND", BIND_HOST)
     if requested != BIND_HOST:
         raise SystemExit(
-            "Refusing to listen on %s. This sandbox binds 127.0.0.1 only." % requested
+            "Refusing to listen on %s. Public bind is not enabled. "
+            "Hosted mode in this stage stays on 127.0.0.1." % requested
         )
     data_dir = Path(os.environ.get("SANDBOX_DATA_DIR", str(ROOT / "data"))).resolve()
     try:
@@ -1104,6 +1135,8 @@ def serve() -> None:
         raise SystemExit("Refusing a non-loopback socket.")
     server.token = token
     server.store = store
+    server.guest_book = store.guest_book
+    server.hosted = hosted_preview.hosted_enabled()
     server.ready = True
     actual_port = server.server_address[1]
     listen_path = data_dir / "listen.json"
@@ -1117,9 +1150,9 @@ def serve() -> None:
     os.chmod(listen_path, 0o600)
     print(
         "private-test bind=%s:%s live_intake=false money_actions=false "
-        "public_listen=false account=%s secret_file=data/access.token "
+        "public_listen=false hosted=%s account=%s secret_file=data/access.token "
         "original_stronghold=NOT_LOCATED"
-        % (BIND_HOST, actual_port, ACCOUNT),
+        % (BIND_HOST, actual_port, str(server.hosted).lower(), ACCOUNT),
         file=sys.stderr,
     )
 

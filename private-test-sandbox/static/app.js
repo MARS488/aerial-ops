@@ -1,6 +1,35 @@
 (function () {
   var ACCOUNT = "sandbox-operator";
-  var sharedJob = null;
+  var DEMO = {
+    name: "DEMO-JOB-001",
+    site: "SYNTHETIC-DEMO-JOB-001",
+    correlation: "CORR-SYNTHETIC-DEMO-JOB-001",
+    key: "idem-demo-job-001"
+  };
+  var NEXT = {
+    received: "in_review",
+    in_review: "reviewed",
+    reviewed: "closed_test"
+  };
+  var STATUS_LABEL = {
+    received: "Received",
+    in_review: "In review",
+    reviewed: "Reviewed",
+    closed_test: "Fictional test closed"
+  };
+  var ACTION_LABEL = {
+    in_review: "Mark in review",
+    reviewed: "Mark reviewed",
+    closed_test: "Close fictional test"
+  };
+  var CHAPTER = {
+    received: "Review it",
+    in_review: "See the same saved job in the castle",
+    reviewed: "Continue the fictional review",
+    closed_test: "Evidence remains unverified"
+  };
+  var job = null;
+  var board = null;
 
   function text(id, value) {
     document.getElementById(id).textContent = value;
@@ -25,7 +54,6 @@
         if (!res.ok) {
           var error = new Error(data.error || "request_failed");
           error.status = res.status;
-          error.data = data;
           throw error;
         }
         return data;
@@ -33,36 +61,11 @@
     });
   }
 
-  function showError(id, err) {
-    var fields = err.data && err.data.fields ? " " + Object.keys(err.data.fields).join(",") : "";
-    text(id, (err.status || "") + " " + err.message + fields);
+  function showClient() {
+    document.getElementById("gate").hidden = true;
+    document.getElementById("client").hidden = false;
+    window.__previewReady = true;
   }
-
-  function loadHealth() {
-    return fetch("/health").then(function (res) { return res.json(); }).then(function (health) {
-      text(
-        "health",
-        "ready=" + health.ready +
-        " bind=" + health.bind +
-        " public_listen=" + health.public_listen +
-        " live_intake=" + health.live_intake_enabled +
-        " money_actions=" + health.money_actions +
-        " original=" + health.original_stronghold_executable
-      );
-    }).catch(function () {
-      text("health", "Health check failed.");
-    });
-  }
-
-  function randomKey() {
-    var bytes = new Uint8Array(8);
-    crypto.getRandomValues(bytes);
-    return "web-" + Array.prototype.map.call(bytes, function (b) {
-      return b.toString(16).padStart(2, "0");
-    }).join("");
-  }
-
-  document.querySelector("input[name=idempotency_key]").value = randomKey();
 
   document.getElementById("unlock").addEventListener("click", function () {
     var value = document.getElementById("token").value;
@@ -73,232 +76,177 @@
     sessionStorage.setItem("sandboxSecret", value);
     document.getElementById("token").value = "";
     api("/api/test-records").then(function () {
-      text("auth-msg", "Secret accepted for this tab.");
+      text("auth-msg", "");
+      showClient();
       return refresh();
-    }).catch(function (err) {
+    }).catch(function () {
       sessionStorage.removeItem("sandboxSecret");
-      text("auth-msg", "Rejected (" + err.status + ").");
+      text("auth-msg", "That secret was not accepted.");
     });
   });
 
-  document.querySelectorAll("nav button").forEach(function (button) {
-    button.addEventListener("click", function () {
-      document.querySelectorAll("nav button").forEach(function (item) {
-        item.classList.toggle("on", item === button);
-      });
-      document.querySelectorAll(".tab").forEach(function (section) {
-        section.hidden = section.id !== button.getAttribute("data-tab");
-      });
-      if (button.getAttribute("data-tab") === "castle") draw();
-    });
-  });
-
-  document.getElementById("intake-form").addEventListener("submit", function (event) {
+  document.getElementById("create-form").addEventListener("submit", function (event) {
     event.preventDefault();
-    var form = event.target;
-    var body = {
-      correlation_id: form.correlation_id.value.trim(),
-      idempotency_key: form.idempotency_key.value.trim(),
-      site_label: form.site_label.value.trim(),
-      purpose: form.purpose.value,
-      package_code: form.package_code.value,
-      note: form.note.value.trim(),
-      synthetic: true
-    };
-    api("/api/test-records", { method: "POST", body: body }).then(function (row) {
-      text("intake-out", JSON.stringify(row, null, 2));
-      if (!row.deduped) form.idempotency_key.value = randomKey();
-      return refresh();
-    }).catch(function (err) { showError("intake-out", err); });
-  });
-
-  document.getElementById("reload").addEventListener("click", refresh);
-
-  document.getElementById("rule-go").addEventListener("click", function () {
-    api("/api/display-rule-check", {
+    var button = document.getElementById("create-job");
+    button.disabled = true;
+    api("/api/test-records", {
       method: "POST",
       body: {
-        preserved_status: document.getElementById("rule-status").value,
-        evidence_verdict: document.getElementById("rule-verdict").value,
-        proof_url_present: document.getElementById("rule-proof").checked
+        correlation_id: DEMO.correlation,
+        idempotency_key: DEMO.key,
+        site_label: DEMO.site,
+        purpose: document.getElementById("purpose").value,
+        package_code: document.getElementById("package").value,
+        note: "fictional preview job",
+        synthetic: true
       }
-    }).then(function (result) {
-      text(
-        "rule-out",
-        "preview wall=" + result.wall_display +
-        " fixture_changed=" + result.fixture_changed +
-        " green_walls_on_fixture=" + result.green_walls_on_fixture +
-        ". " + result.note
-      );
-      return loadCastle();
-    }).catch(function (err) { showError("rule-out", err); });
+    }).then(function () {
+      return refresh();
+    }).catch(function () {
+      button.disabled = false;
+      text("chapter", "The fictional job was not saved.");
+    });
   });
 
-  document.getElementById("evidence").addEventListener("click", function () {
-    if (!sharedJob) {
-      text("score-out", "No shared job is stored.");
-      return;
-    }
+  document.getElementById("advance").addEventListener("click", function () {
+    if (!job) return;
+    var status = NEXT[job.status];
+    if (!status) return;
+    api("/api/test-records/" + job.id + "/status", {
+      method: "POST",
+      body: {
+        status: status,
+        note: "fictional review step",
+        dedup_key: "status-" + job.idempotency_key + "-" + status
+      }
+    }).then(function () {
+      return refresh();
+    }).catch(function () {
+      text("chapter", "That step was not applied.");
+    });
+  });
+
+  document.getElementById("show-castle").addEventListener("click", function () {
+    text("chapter", "See the same saved job in the castle");
+    document.getElementById("castle").scrollIntoView({ behavior: "smooth", block: "start" });
+    draw();
+  });
+
+  document.getElementById("record-evidence").addEventListener("click", function () {
+    if (!job) return;
     api("/api/score-events", {
       method: "POST",
       body: {
-        dedup_key: "score-" + sharedJob.idempotency_key,
-        correlation_id: sharedJob.correlation_id,
+        dedup_key: "score-" + job.idempotency_key,
+        correlation_id: job.correlation_id,
         subject: "civilitysync-test",
-        evidence_ref: "job:" + sharedJob.id.toLowerCase(),
+        evidence_ref: "job:" + job.id.toLowerCase(),
         review_state: "uninitialized",
-        note: "synthetic evidence",
+        note: "fictional evidence",
         synthetic: true
       }
-    }).then(function (board) {
-      text("score-out", JSON.stringify(board, null, 2));
+    }).then(function (score) {
+      var note = document.getElementById("evidence-note");
+      note.hidden = false;
+      note.textContent = score.points_state === "uninitialized"
+        ? "Fictional evidence saved. No points were added. Sample checks stay unverified."
+        : "Fictional evidence saved. Sample checks stay unverified.";
+      text("chapter", "Evidence remains unverified");
       return refresh();
-    }).catch(function (err) { showError("score-out", err); });
+    }).catch(function () {
+      text("chapter", "Fictional evidence was not saved.");
+    });
   });
 
   function refresh() {
-    return Promise.all([loadRecords(), loadCastle(), loadScore()]);
+    return Promise.all([loadJob(), loadCastle()]);
   }
 
-  function loadRecords() {
+  function loadJob() {
     return api("/api/test-records").then(function (payload) {
-      var box = document.getElementById("records");
-      box.replaceChildren();
-      sharedJob = payload.records[0] || null;
+      job = null;
       payload.records.forEach(function (row) {
-        var block = document.createElement("div");
-        block.className = "record";
-        var heading = document.createElement("strong");
-        if (row.id === "TS-0001") heading.id = "job-status";
-        heading.textContent = row.id + " " + row.status + " " + row.correlation_id;
-        block.appendChild(heading);
-        var actions = document.createElement("div");
-        var nextStatus = {
-          received: ["in_review", "rejected"],
-          in_review: ["reviewed", "rejected"],
-          reviewed: ["closed_test"],
-          closed_test: [],
-          rejected: []
-        }[row.status] || [];
-        nextStatus.forEach(function (status) {
-          var button = document.createElement("button");
-          button.type = "button";
-          button.textContent = status;
-          button.addEventListener("click", function () {
-            api("/api/test-records/" + row.id + "/status", {
-              method: "POST",
-              body: {
-                status: status,
-                note: "synthetic review",
-                dedup_key: "status-" + row.idempotency_key + "-" + status
-              }
-            }).then(function (updated) {
-              text("readback", JSON.stringify(updated, null, 2));
-              return refresh();
-            }).catch(function (err) { showError("readback", err); });
-          });
-          actions.appendChild(button);
-        });
-        var read = document.createElement("button");
-        read.type = "button";
-        read.textContent = "Read back";
-        read.addEventListener("click", function () {
-          api("/api/test-records/" + row.id).then(function (full) {
-            text("readback", JSON.stringify(full, null, 2));
-          }).catch(function (err) { showError("readback", err); });
-        });
-        actions.appendChild(read);
-        block.appendChild(actions);
-        box.appendChild(block);
+        if (row.idempotency_key === DEMO.key) job = row;
       });
-      if (!payload.records.length) box.textContent = "No stored jobs.";
+      var card = document.getElementById("job-card");
+      var advance = document.getElementById("advance");
+      var evidence = document.getElementById("record-evidence");
+      if (!job) {
+        card.hidden = true;
+        return;
+      }
+      card.hidden = false;
+      document.getElementById("create-job").disabled = true;
+      text("job-title", DEMO.name);
+      text("job-status", STATUS_LABEL[job.status] || job.status);
+      text("chapter", CHAPTER[job.status] || "Create a fictional job");
+      var next = NEXT[job.status];
+      if (next) {
+        advance.hidden = false;
+        advance.textContent = ACTION_LABEL[next];
+      } else {
+        advance.hidden = true;
+      }
+      evidence.hidden = job.status !== "closed_test";
     });
   }
 
   function loadCastle() {
-    return api("/api/castle-view").then(function (board) {
-      window.__castle = board;
-      var job = board.jobs[0];
-      text(
-        "shared-job",
-        job
-          ? "Shared job: " + job.id + " status=" + job.status + " correlation=" + job.correlation_id
-          : "Shared job: none"
-      );
-      text("green-count", "Green segments: " + board.compliance.green_walls);
-      var counts = board.compliance.preserved_counts;
-      text(
-        "preserved-counts",
-        "Preserved counts: " + counts.Built + " Built, " +
-        counts["In progress"] + " In progress, " + counts["Not started"] + " Not started"
-      );
-      var table = document.createElement("table");
-      var head = document.createElement("tr");
-      ["Order", "Title", "Preserved status", "Verdict", "Wall"].forEach(function (name) {
-        var cell = document.createElement("th");
-        cell.textContent = name;
-        head.appendChild(cell);
+    return api("/api/castle-view").then(function (payload) {
+      board = payload;
+      var match = null;
+      payload.jobs.forEach(function (row) {
+        if (row.idempotency_key === DEMO.key) match = row;
       });
-      table.appendChild(head);
-      board.compliance.rows.forEach(function (row) {
-        var tr = document.createElement("tr");
-        tr.className = "board-row " + (row.wall_display === "green" ? "is-green" : "not-green");
-        [row.order, row.title, row.preserved_status, row.evidence_verdict, row.wall_display].forEach(function (value) {
-          var cell = document.createElement("td");
-          cell.textContent = String(value);
-          tr.appendChild(cell);
-        });
-        table.appendChild(tr);
-      });
-      var host = document.getElementById("board");
-      host.replaceChildren(table);
+      text(
+        "shared-line",
+        match
+          ? DEMO.name + " is the saved job. Status: " + (STATUS_LABEL[match.status] || match.status)
+          : "No fictional job saved yet"
+      );
+      text("verified-count", "Verified segments: " + payload.compliance.green_walls);
       draw();
     });
   }
 
-  function loadScore() {
-    return api("/api/scoreboard").then(function (board) {
-      text(
-        "points-state",
-        "Points state: " + board.points_state +
-        " sum=" + board.synthetic_points_sum +
-        " events=" + board.event_count
-      );
-    });
-  }
-
   function draw() {
-    var board = window.__castle;
     var canvas = document.getElementById("yard");
-    if (!board || !canvas) return;
+    if (!canvas || !board) return;
     var ctx = canvas.getContext("2d");
+    var rows = board.compliance.rows;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#e7e1d2";
+    ctx.fillStyle = "#efe8da";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#8aa0ad";
-    ctx.fillRect(36, 28, 648, 264);
-    ctx.fillStyle = "#ddd6c6";
-    ctx.fillRect(70, 58, 580, 204);
-    board.compliance.rows.forEach(function (row, index) {
-      var x = 84 + (index % 10) * 56;
-      var y = 74 + Math.floor(index / 10) * 36;
+    ctx.fillRect(48, 36, 784, 250);
+    ctx.fillStyle = "#e4dccb";
+    ctx.fillRect(86, 70, 708, 180);
+    rows.forEach(function (row, index) {
+      var x = 108 + (index % 10) * 68;
+      var y = 92 + Math.floor(index / 10) * 48;
       ctx.fillStyle = row.wall_display === "green" ? "#2f6b3c" : "#6e685c";
-      ctx.fillRect(x, y, 40, 22);
-      if (row.preserved_status === "Built") {
-        ctx.fillStyle = "#f7f4ea";
-        ctx.font = "12px sans-serif";
-        ctx.fillText("B", x + 16, y + 15);
-      }
+      ctx.fillRect(x, y, 48, 26);
     });
-    ctx.fillStyle = "#1e2922";
-    ctx.font = "15px Georgia, serif";
-    ctx.fillText("NEW PROTOTYPE — NOT THE NOV 6 SKETCH", 84, 176);
-    var job = board.jobs[0];
-    ctx.fillText(job ? ("Shared job " + job.id + " " + job.status) : "No synthetic job stored", 84, 202);
-    ctx.fillText("Green segments: " + board.compliance.green_walls, 84, 228);
-    ctx.fillText("Treasury: " + board.treasury.opening_balance, 84, 252);
+    ctx.fillStyle = "#1b2420";
+    ctx.font = "22px Georgia, serif";
+    ctx.fillText("Sample visualization — not an earlier sketch", 108, 214);
+    ctx.font = "18px Georgia, serif";
+    var match = null;
+    board.jobs.forEach(function (row) {
+      if (row.idempotency_key === DEMO.key) match = row;
+    });
+    ctx.fillText(match ? (DEMO.name + " · " + (STATUS_LABEL[match.status] || match.status)) : "No fictional job saved yet", 108, 244);
+    ctx.fillText("Verified segments: " + board.compliance.green_walls, 108, 272);
   }
 
-  loadHealth();
-  window.__sandboxReady = true;
+  window.__previewBound = true;
+  window.__previewReady = false;
+  if (sessionStorage.getItem("sandboxSecret")) {
+    api("/api/test-records").then(function () {
+      showClient();
+      return refresh();
+    }).catch(function () {
+      sessionStorage.removeItem("sandboxSecret");
+    });
+  }
 })();

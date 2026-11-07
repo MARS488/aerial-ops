@@ -6,3 +6,5 @@ __pycache__/
 chrome-profile/
 test-run/
 browser-profile/
+cloud-capture/
+run-output-guests/

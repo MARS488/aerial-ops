@@ -3,108 +3,93 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Private test sandbox</title>
+  <title>CivilitySync preview</title>
   <link rel="stylesheet" href="/app.css">
 </head>
 <body>
-  <p class="banner">PRIVATE TEST ONLY. This page talks to 127.0.0.1. It does not book, invoice, file, pay, or contact an outside service. Synthetic labels only.</p>
-  <header>
-    <div>
-      <h1>CivilitySync <span>shared test</span></h1>
-      <p class="sub">One local database. The intake view and the new castle view read the same job.</p>
+  <p id="disclaimer" class="disclaimer">Pre-release prototype • Fictional data • Not accepting operational customers</p>
+
+  <section id="gate" class="gate">
+    <div class="sheet narrow">
+      <p class="eyebrow">Private preview</p>
+      <h1>Open this preview</h1>
+      <p class="lede">This computer keeps the access secret in a local file. Enter it once. It is not shown again on the preview.</p>
+      <label for="token">Local access secret</label>
+      <input id="token" type="password" autocomplete="off" spellcheck="false">
+      <button id="unlock" type="button">Continue</button>
+      <p id="auth-msg" class="hint" role="status"></p>
     </div>
-    <p id="health">Checking health…</p>
-  </header>
-
-  <section id="gate" class="panel">
-    <h2>Local secret</h2>
-    <label for="token">Access secret for account <code>sandbox-operator</code></label>
-    <input id="token" type="password" autocomplete="off" spellcheck="false">
-    <button id="unlock" type="button">Use secret on this tab</button>
-    <p class="hint">Read <code>data/access.token</code> on this computer. The value is not printed here and is not a credential for any other system.</p>
-    <p id="auth-msg" role="status"></p>
   </section>
 
-  <nav>
-    <button type="button" data-tab="intake" class="on">Intake</button>
-    <button type="button" data-tab="review">Review</button>
-    <button type="button" data-tab="castle">New castle</button>
-    <button type="button" data-tab="score">Scoreboard</button>
-  </nav>
+  <main id="client" class="sheet" hidden>
+    <p id="chapter" class="chapter">Create a fictional job</p>
+    <header class="mast">
+      <p class="eyebrow">CivilitySync</p>
+      <h1>A fictional job, saved on this computer</h1>
+      <p class="lede">This preview shows one made-up job moving from creation to a closed test. It does not accept customers.</p>
+    </header>
 
-  <section id="intake" class="panel tab">
-    <h2>Synthetic intake</h2>
-    <form id="intake-form">
-      <label>Correlation id <input name="correlation_id" value="CORR-SYNTHETIC-SITE-ALPHA" required></label>
-      <label>Idempotency key <input name="idempotency_key" required></label>
-      <label>Site label <input name="site_label" value="SYNTHETIC-SITE-ALPHA" required></label>
-      <label>Purpose
-        <select name="purpose">
-          <option value="general_assessment">general_assessment</option>
-          <option value="storm_documentation">storm_documentation</option>
+    <section class="card" id="create-card" aria-labelledby="create-heading">
+      <h2 id="create-heading">Fictional job</h2>
+      <form id="create-form">
+        <label for="job-name">Job name</label>
+        <input id="job-name" value="DEMO-JOB-001" readonly>
+        <label for="purpose">What the sample represents</label>
+        <select id="purpose">
+          <option value="general_assessment">A sample property look</option>
+          <option value="storm_documentation">A sample storm record</option>
         </select>
-      </label>
-      <label>Package code
-        <select name="package_code">
-          <option value="quick_look">quick_look</option>
-          <option value="full_assessment">full_assessment</option>
-          <option value="seasonal_plan">seasonal_plan</option>
+        <label for="package">Sample scope</label>
+        <select id="package">
+          <option value="quick_look">Short look</option>
+          <option value="full_assessment">Fuller sample</option>
+          <option value="seasonal_plan">Repeat sample</option>
         </select>
-      </label>
-      <label>Note <input name="note" value="synthetic intake"></label>
-      <button type="submit">Save test record</button>
-    </form>
-    <p class="hint">Price is not accepted. A repeated idempotency key returns the same record.</p>
-    <pre id="intake-out"></pre>
-  </section>
+        <p class="hint">These scope names are sample labels. They are not a price list.</p>
+        <button id="create-job" type="submit">Save fictional job</button>
+      </form>
+    </section>
 
-  <section id="review" class="panel tab" hidden>
-    <h2>Review</h2>
-    <button id="reload" type="button">Reload from the shared store</button>
-    <div id="records"></div>
-    <pre id="readback"></pre>
-  </section>
+    <section class="card" id="job-card" hidden aria-labelledby="job-heading">
+      <h2 id="job-heading">Saved job</h2>
+      <p id="job-title" class="job-title">DEMO-JOB-001</p>
+      <p id="job-status" class="status">Received</p>
+      <p id="job-note" class="hint">This is the same record the sample castle reads.</p>
+      <button id="advance" type="button">Mark in review</button>
+      <button id="show-castle" type="button" class="secondary">Show the sample castle</button>
+      <button id="record-evidence" type="button" class="secondary" hidden>Record fictional evidence</button>
+      <p id="evidence-note" class="hint" hidden></p>
+    </section>
 
-  <section id="castle" class="panel tab" hidden>
-    <h2>New castle prototype</h2>
-    <p class="banner dark">NEW-MINIMAL-PROTOTYPE-NOT-ORIGINAL. The original executable was not located. This drawing is not the Nov 6 sketch. Nonempty proof is not completion.</p>
-    <canvas id="yard" width="720" height="320"></canvas>
-    <p id="shared-job">Shared job: not loaded</p>
-    <p id="green-count">Green segments: not loaded</p>
-    <p id="preserved-counts">Preserved counts: not loaded</p>
-    <p class="hint">A mark reading B is a preserved Built label. It is not a green wall and it is not a software build.</p>
-    <div class="rule">
-      <h3>Display rule preview</h3>
-      <p class="hint">This preview does not change the 19 rows.</p>
-      <label>Preserved status
-        <select id="rule-status">
-          <option>Built</option>
-          <option>In progress</option>
-          <option>Not started</option>
-        </select>
-      </label>
-      <label>Verdict
-        <select id="rule-verdict">
-          <option>UNVERIFIED</option>
-          <option>EXPLICIT_FAIL</option>
-          <option>EXPLICIT_PASS</option>
-          <option>UNKNOWN</option>
-        </select>
-      </label>
-      <label><input id="rule-proof" type="checkbox" checked> Proof URL present</label>
-      <button id="rule-go" type="button">Preview wall color</button>
-      <p id="rule-out"></p>
-    </div>
-    <div id="board"></div>
-  </section>
+    <section class="card" id="castle" aria-labelledby="castle-heading">
+      <h2 id="castle-heading">Sample castle</h2>
+      <p class="hint">Sample visualization. This is not an earlier sketch. That source was not located.</p>
+      <canvas id="yard" width="880" height="360" aria-label="Sample castle with unverified checks"></canvas>
+      <p id="shared-line" class="status">No fictional job saved yet</p>
+      <p id="verified-count" class="status">Verified segments: 0</p>
+      <p class="hint">All sample checks stay unverified. A saved job does not turn them green.</p>
+    </section>
 
-  <section id="score" class="panel tab" hidden>
-    <h2>Scoreboard</h2>
-    <p id="points-state">Points: not loaded</p>
-    <p class="hint">Points do not grant access, move money, or turn a compliance wall green.</p>
-    <button id="evidence" type="button">Append uninitialized evidence for the shared job</button>
-    <pre id="score-out"></pre>
-  </section>
+    <section class="card" id="limits" aria-labelledby="limits-heading">
+      <h2 id="limits-heading">What this preview shows</h2>
+      <ul>
+        <li>A fictional job can be saved on this computer.</li>
+        <li>That job can be marked in review, reviewed, and closed as a test.</li>
+        <li>The sample castle reads the same saved job.</li>
+        <li>Fictional evidence stays unverified, and no points are added.</li>
+      </ul>
+      <h2>What it is not connected to</h2>
+      <ul>
+        <li>No booking, payment, filing, or messages.</li>
+        <li>No outside service and no public website.</li>
+        <li>No claim that a business, certificate, or filing is complete.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="sheet foot">
+    <p>Pre-release prototype • Fictional data • Not accepting operational customers</p>
+  </footer>
   <script src="/app.js"></script>
 </body>
 </html>

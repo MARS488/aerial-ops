@@ -1,0 +1,43 @@
+:root {
+  --paper: #f3efe6;
+  --ink: #1b2420;
+  --muted: #5c6560;
+  --line: #ddd6c8;
+  --sky: #1e3a4c;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 18px/1.5 Georgia, "Iowan Old Style", Palatino, serif;
+}
+button, input, label, .hint, .eyebrow, .disclaimer {
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+}
+.disclaimer {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: #163042;
+  color: #f7f3ea;
+  text-align: center;
+}
+.sheet { width: min(40rem, calc(100% - 1.5rem)); margin: 1.5rem auto 2rem; }
+.eyebrow { letter-spacing: 0.12em; text-transform: uppercase; color: var(--sky); font-size: 0.78rem; }
+h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); line-height: 1.15; margin: 0.3rem 0; }
+.lede, .hint { color: var(--muted); }
+label { display: block; margin: 0.8rem 0 0.3rem; }
+input { width: 100%; padding: 0.7rem; font-size: 1rem; }
+button {
+  margin-top: 1rem;
+  min-height: 3rem;
+  padding: 0.6rem 1rem;
+  background: var(--sky);
+  color: #f7f3ea;
+  border: 0;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+@media (max-width: 640px) {
+  button, input { width: 100%; }
+}

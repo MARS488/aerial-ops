@@ -1,0 +1,67 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 1698 >>
+stream
+BT
+/F1 12 Tf
+54 750 Td
+16 TL
+(CivilitySync preview facts  -  7 November 2026) Tj
+T* () Tj
+T* (This is a pre-release prototype. It uses fictional data.) Tj
+T* (It is not accepting operational customers. It is not a launch.) Tj
+T* () Tj
+T* (What a person can do on this computer) Tj
+T* (- Save one fictional job named DEMO-JOB-001.) Tj
+T* (- Mark it in review, then reviewed, then closed as a test.) Tj
+T* (- See that same saved job on a sample castle drawing.) Tj
+T* (- Save fictional evidence. No points are added.) Tj
+T* (- Read the notice: sample checks stay unverified.) Tj
+T* () Tj
+T* (What it does not do) Tj
+T* (- It does not book, take payment, file, or send a message.) Tj
+T* (- It does not connect to an outside service or a public site.) Tj
+T* (- It does not prove a certificate, a filing, or a tax step.) Tj
+T* (- The castle is a new sample. The earlier sketch was not located.) Tj
+T* (- Nineteen sample checks stay unverified and not green.) Tj
+T* () Tj
+T* (Local API check, after unpacking) Tj
+T* (python3 tests/shared_e2e_scenario.py --api-only \\) Tj
+T* (  --execution-environment parent_local --output run-output) Tj
+T* (Expect one job, status closed_test, four history events,) Tj
+T* (one synthetic score event, points empty, zero green walls.) Tj
+T* (That command does not start a browser.) Tj
+T* (Independent review of this build stays pending until a) Tj
+T* (separate reviewer signs it. This page is not that signature.) Tj
+T* () Tj
+T* (Hosting is not purchased and not deployed. No public URL.) Tj
+T* (A candidate Render base of 7.25 USD per month, plus usage) Tj
+T* (and tax, is not a bill cap and is not approved. See) Tj
+T* (HOSTING_READINESS.md before any purchase.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001990 00000 n 
+trailer << /Size 6 /Root 1 0 R >>
+startxref
+2060
+%%EOF

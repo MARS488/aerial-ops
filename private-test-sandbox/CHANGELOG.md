@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-07 — Client preview, recording, and hosted rehearsal
+
+The page a person sees is now a fictional job preview: create `DEMO-JOB-001`, mark it in review, show the same saved job on the sample castle, mark it reviewed, close the test, and record fictional evidence with no points. The disclaimer stays on screen. Internal board titles, operator secrets, and debug dumps are not on that page. The 19 checks stay unverified and not green. The castle remains a new sample, and the original sketch is still not located.
+
+A cloud display recording of that path is a real browser session, not a drawn mock. The local scenario still does not start a browser.
+
+`SANDBOX_HOSTED=1` adds per-guest codes, expiry, revocation, and separate guest rows. It still listens only on `127.0.0.1`. Nothing was purchased or deployed. See `HOSTING_READINESS.md`.
+
 ## 2026-11-07 — Synthetic flag, status keys, and environment flag
 
 The local API run and a separate review passed the shared-job contract through `in_review`. Three defects from that review are fixed here:
