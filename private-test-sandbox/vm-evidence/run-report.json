@@ -1,13 +1,15 @@
 {
+  "browser": "SKIPPED_NOT_RUN",
   "castle_prototype": "NEW-MINIMAL-PROTOTYPE-NOT-ORIGINAL",
   "commands": [
     "python3 verify_stronghold.py",
-    "python3 tests/shared_e2e_scenario.py --output run-output"
+    "python3 tests/shared_e2e_scenario.py --api-only --output run-output"
   ],
   "environment": "cloud_vm_loopback",
   "independent_review": "BLOCKED",
+  "mode": "api-only",
   "original_executable": "NOT_LOCATED",
-  "overall": "VM_STAGES_PASSED_REVIEW_BLOCKED",
+  "overall": "API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_BLOCKED",
   "python": "3.12.3",
   "scenario_id": "shared-e2e-2026-11-07",
   "session_model": "bearer secret file survives restart; no cookie session; caller must present the secret again",
@@ -143,9 +145,9 @@
       "stage": "bind.refusal"
     },
     {
-      "detail": "4 loopback screenshots",
-      "outcome": "PASS",
-      "stage": "screenshots"
+      "detail": "api-only; Chrome was not started and UI interaction was not tested",
+      "outcome": "SKIPPED_NOT_RUN",
+      "stage": "browser.capture"
     },
     {
       "detail": "secret not in server log",
@@ -162,5 +164,6 @@
       "outcome": "BLOCKED",
       "stage": "independent.review"
     }
-  ]
+  ],
+  "ui_interaction_tested": false
 }

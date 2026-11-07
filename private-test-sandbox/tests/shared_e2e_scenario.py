@@ -11,6 +11,7 @@ import ast
 import hashlib
 import json
 import os
+import shutil
 import socket
 import sqlite3
 import subprocess
@@ -267,10 +268,11 @@ def write_outputs(out: Path, report: dict, ledger: Optional[dict], db_counts: Op
         "# Shared scenario run",
         "",
         "Environment: `%s`" % report["environment"],
+        "Mode: `%s`" % report["mode"],
         "Overall: `%s`" % report["overall"],
         "",
+        "Browser interaction was not run. SKIPPED_NOT_RUN is not a pass.",
         "Independent review is BLOCKED. This process does not certify the result.",
-        "Parent local run is BLOCKED when this file was produced on the cloud VM.",
         "",
         "| Stage | Outcome | Detail |",
         "| --- | --- | --- |",
@@ -282,18 +284,39 @@ def write_outputs(out: Path, report: dict, ledger: Optional[dict], db_counts: Op
     (out / "run-report.md").write_text("\n".join(lines), encoding="utf-8")
 
 
-def main() -> int:
-    expected = json.loads(EXPECTED_PATH.read_text(encoding="utf-8"))
+def parse_args(argv: list[str]) -> Path:
+    """API-only is the only mode. Browser flags are rejected before any process starts."""
     out = ROOT / "run-output"
-    if len(sys.argv) == 3 and sys.argv[1] == "--output":
-        out = Path(sys.argv[2]).resolve()
+    saw_output = False
+    index = 1
+    while index < len(argv):
+        arg = argv[index]
+        if arg in {"--api-only", "--skip-browser"}:
+            index += 1
+            continue
+        if arg in {"--with-browser", "--browser", "--capture"}:
+            raise SystemExit(
+                "This scenario does not start a browser. "
+                "Run: python3 tests/shared_e2e_scenario.py --api-only --output run-output"
+            )
+        if arg == "--output":
+            if saw_output or index + 1 >= len(argv):
+                raise SystemExit("--output needs one directory")
+            out = Path(argv[index + 1]).resolve()
+            saw_output = True
+            index += 2
+            continue
+        raise SystemExit(
+            "Unknown argument. Supported: --api-only, --skip-browser, --output DIR"
+        )
+    return out
+
+
+def main() -> int:
+    out = parse_args(sys.argv)
+    expected = json.loads(EXPECTED_PATH.read_text(encoding="utf-8"))
     if out.exists():
-        for child in sorted(out.rglob("*"), reverse=True):
-            if child.is_file():
-                child.unlink()
-        for child in sorted(out.rglob("*"), reverse=True):
-            if child.is_dir():
-                child.rmdir()
+        shutil.rmtree(out)
     data = out / "data"
     data.mkdir(parents=True, exist_ok=True)
     log_path = out / "server.log"
@@ -570,25 +593,11 @@ def main() -> int:
         if refused_proc.returncode == 0:
             fail("bind.refusal", "exit 0")
         add("bind.refusal", "PASS", "exit %s" % refused_proc.returncode)
-
-        capture = subprocess.run(
-            [
-                sys.executable,
-                str(ROOT / "tests" / "browser_capture.py"),
-                "--data-dir",
-                str(data),
-                "--shots",
-                str(out / "screenshots"),
-            ],
-            cwd=str(ROOT),
-            check=False,
-            capture_output=True,
-            text=True,
+        add(
+            "browser.capture",
+            "SKIPPED_NOT_RUN",
+            "api-only; Chrome was not started and UI interaction was not tested",
         )
-        if capture.returncode != 0:
-            detail = (capture.stdout + capture.stderr).strip().splitlines()
-            fail("screenshots", detail[-1] if detail else "browser capture failed")
-        add("screenshots", "PASS", "4 loopback screenshots")
 
         log_text = log_path.read_text(encoding="utf-8", errors="replace")
         if secret and secret in log_text:
@@ -606,12 +615,20 @@ def main() -> int:
         if "proc" in locals():
             stop_server(locals()["proc"])
     failed = [stage for stage in stages if stage["outcome"] == "FAIL"]
-    overall = "FAILED" if failed or outcome else "VM_STAGES_PASSED_REVIEW_BLOCKED"
-    if environment_name() != "cloud_vm_loopback" and not failed and outcome == 0:
-        overall = "LOCAL_STAGES_PASSED_REVIEW_BLOCKED"
+    if any(stage["outcome"] == "PASS" and stage["stage"] == "browser.capture" for stage in stages):
+        failed.append({"stage": "browser.capture", "outcome": "FAIL", "detail": "browser was marked passed"})
+    if failed or outcome:
+        overall = "FAILED"
+    elif environment_name() == "cloud_vm_loopback":
+        overall = "API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_BLOCKED"
+    else:
+        overall = "LOCAL_API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_BLOCKED"
     report = {
         "scenario_id": expected["scenario_id"],
         "environment": environment_name(),
+        "mode": "api-only",
+        "browser": "SKIPPED_NOT_RUN",
+        "ui_interaction_tested": False,
         "python": sys.version.split()[0],
         "overall": overall,
         "session_model": "bearer secret file survives restart; no cookie session; caller must present the secret again",
@@ -620,7 +637,7 @@ def main() -> int:
         "independent_review": "BLOCKED",
         "commands": [
             "python3 verify_stronghold.py",
-            "python3 tests/shared_e2e_scenario.py --output run-output",
+            "python3 tests/shared_e2e_scenario.py --api-only --output run-output",
         ],
         "stages": stages,
     }

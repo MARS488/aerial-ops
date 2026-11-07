@@ -1,10 +1,11 @@
 # Shared scenario run
 
 Environment: `cloud_vm_loopback`
-Overall: `VM_STAGES_PASSED_REVIEW_BLOCKED`
+Mode: `api-only`
+Overall: `API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_BLOCKED`
 
+Browser interaction was not run. SKIPPED_NOT_RUN is not a pass.
 Independent review is BLOCKED. This process does not certify the result.
-Parent local run is BLOCKED when this file was produced on the cloud VM.
 
 | Stage | Outcome | Detail |
 | --- | --- | --- |
@@ -34,7 +35,7 @@ Parent local run is BLOCKED when this file was produced on the cloud VM.
 | sqlite.counts | PASS | records=1 events=2 score_events=1 |
 | original.lookup | NOT_LOCATED | expected; new castle is not the Nov 6 sketch |
 | bind.refusal | PASS | exit 1 |
-| screenshots | PASS | 4 loopback screenshots |
+| browser.capture | SKIPPED_NOT_RUN | api-only; Chrome was not started and UI interaction was not tested |
 | log.redaction | PASS | secret not in server log |
 | parent.local_run | BLOCKED | not a substitute for the parent running this script |
 | independent.review | BLOCKED | a separate reviewer must check the raw database after the artifact is returned |

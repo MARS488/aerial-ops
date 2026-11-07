@@ -17,8 +17,10 @@ From this directory:
 
 ```sh
 python3 verify_stronghold.py
-python3 tests/shared_e2e_scenario.py --output run-output
+python3 tests/shared_e2e_scenario.py --api-only --output run-output
 ```
+
+`--skip-browser` is the same run. So is omitting the mode flag. The default is API-only. The command does not start Chrome, and it does not skip the API, restart, dedupe, database, or auth checks. `tests/browser_capture.py` is not called. Running that file directly prints `SKIPPED_NOT_RUN` and exits 2.
 
 The scenario is deterministic. It uses one synthetic job:
 
@@ -39,9 +41,11 @@ Those counts live in `tests/expected-counts.json`. The script fails if the run d
 
 The script's overall line is not an independent review:
 
-- `VM_STAGES_PASSED_REVIEW_BLOCKED` means the cloud VM stages passed and review is still blocked.
-- `LOCAL_STAGES_PASSED_REVIEW_BLOCKED` means this computer's stages passed and a separate reviewer has not signed.
-- `FAILED` means a stage did not match. Read `run-output/run-report.md` for the stage name and the mismatch. Do not treat a failed run as success.
+- `API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_BLOCKED` means the cloud VM API stages passed. Browser interaction was not run. Review is still blocked.
+- `LOCAL_API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_BLOCKED` means this computer's API stages passed. Browser interaction was not run, and a separate reviewer has not signed.
+- `FAILED` means an API, restart, dedupe, database, or auth stage did not match. Read `run-output/run-report.md`. Do not treat a failed run as success.
+
+`browser.capture` is `SKIPPED_NOT_RUN` on every successful shell run. That value is not a pass, and it does not mean the page was clicked through.
 
 `parent.local_run` and `independent.review` stay `BLOCKED` inside the script. A separate person fills `REVIEWER.md` after inspecting the raw database. The implementation run does not do that.
 
@@ -120,9 +124,15 @@ sha256sum -c SHA256SUMS.source
 - Treasury opening balance is `UNKNOWN`, not zero.
 - No live Notion connection. Base44 is not used.
 
-## Cloud VM failures before the recorded pass
+## Cloud VM evidence for this archive
 
-The recorded `vm-evidence` run passed. Two earlier runs of the same scenario failed and were fixed before that pass:
+`vm-evidence/` is an API-only loopback run. Its overall line is `API_ONLY_PASSED_BROWSER_SKIPPED_REVIEW_BLOCKED`. It does not include browser screenshots, and it does not claim the page was driven.
+
+The previous package blocked a local shell preflight because the scenario always launched Chrome. See `CHANGELOG.md`.
+
+## Earlier harness breaks
+
+Two runs before the first recorded pass failed and were fixed in the scenario checker:
 
 - The network check treated `sqlite3.connect` and `urllib.parse` as outbound clients. They are not. The checker now allows them.
 - Restart reused a stale `listen.json`, so the client called a closed port and got connection refused. The waiter now requires the new process id.

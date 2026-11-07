@@ -1,5 +1,5 @@
 Local access secret written to data/access.token (mode 0600). Read it on this computer. Do not paste it into chat.
-private-test bind=127.0.0.1:37331 live_intake=false money_actions=false public_listen=false account=sandbox-operator secret_file=data/access.token original_stronghold=NOT_LOCATED
+private-test bind=127.0.0.1:45397 live_intake=false money_actions=false public_listen=false account=sandbox-operator secret_file=data/access.token original_stronghold=NOT_LOCATED
 sandbox "GET /health HTTP/1.1" 200 -
 sandbox "POST /api/test-records HTTP/1.1" 401 -
 sandbox "GET /api/test-records HTTP/1.1" 401 -
@@ -29,7 +29,7 @@ sandbox "GET /api/castle-view HTTP/1.1" 200 -
 sandbox "GET /api/ledger HTTP/1.1" 200 -
 sandbox "GET /api/test-records/TS-0001 HTTP/1.1" 200 -
 Using existing local access secret at data/access.token.
-private-test bind=127.0.0.1:45463 live_intake=false money_actions=false public_listen=false account=sandbox-operator secret_file=data/access.token original_stronghold=NOT_LOCATED
+private-test bind=127.0.0.1:44091 live_intake=false money_actions=false public_listen=false account=sandbox-operator secret_file=data/access.token original_stronghold=NOT_LOCATED
 sandbox "GET /api/ledger HTTP/1.1" 401 -
 sandbox "GET /api/test-records/TS-0001 HTTP/1.1" 200 -
 sandbox "GET /api/castle-view HTTP/1.1" 200 -
