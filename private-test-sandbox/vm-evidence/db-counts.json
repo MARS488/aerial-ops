@@ -1,0 +1,11 @@
+{
+  "billing_rows": [
+    {
+      "amount_cents": null,
+      "billing_state": "disabled"
+    }
+  ],
+  "events": 2,
+  "records": 1,
+  "score_events": 1
+}

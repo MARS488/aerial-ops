@@ -1,0 +1,3 @@
+# Intentionally empty.
+# This package runs on the Python 3.9+ standard library only.
+# Do not add packages. Do not run pip install.

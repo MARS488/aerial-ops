@@ -1,0 +1,72 @@
+:root {
+  --paper: #f3efe4;
+  --ink: #1e2922;
+  --muted: #5c665c;
+  --line: #d5d0c3;
+  --sky: #23445d;
+  --panel: #faf8f2;
+  --stone: #6e685c;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.45 Georgia, "Iowan Old Style", serif;
+}
+code, input, select, button, .hint, pre, nav button {
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+}
+header, nav, .panel { max-width: 920px; margin: 0 auto; }
+header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.2rem 1rem 0.4rem;
+}
+h1 { font-size: 1.8rem; margin: 0; }
+h1 span, h2 { color: var(--sky); }
+h2 { font-size: 1.25rem; margin: 0 0 0.6rem; }
+.sub, #health, .hint { color: var(--muted); font-size: 0.92rem; }
+.banner {
+  margin: 0;
+  padding: 0.55rem 1rem;
+  background: var(--sky);
+  color: #f7f4ea;
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 0.86rem;
+}
+.banner.dark { background: #3d3830; margin-bottom: 0.8rem; }
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  margin: 0.8rem auto;
+  padding: 1rem;
+}
+nav { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0 1rem; }
+nav button, button {
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 0.45rem 0.7rem;
+  cursor: pointer;
+}
+nav button.on { background: var(--sky); color: #f7f4ea; }
+label { display: block; margin: 0.55rem 0; font-size: 0.92rem; }
+input, select { width: 100%; max-width: 32rem; padding: 0.45rem; }
+form button, #reload, #rule-go, #evidence, #unlock { margin-top: 0.4rem; }
+pre {
+  white-space: pre-wrap;
+  background: #f3efe4;
+  padding: 0.7rem;
+  border: 1px solid var(--line);
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+th, td { text-align: left; border-top: 1px solid var(--line); padding: 0.35rem; vertical-align: top; }
+canvas { width: 100%; height: auto; background: #e7e1d2; border: 1px solid var(--line); }
+.record { border-top: 1px solid var(--line); padding: 0.6rem 0; }
+.is-green { color: #1d5c32; }
+.not-green { color: var(--stone); }
+@media (max-width: 700px) {
+  header { display: block; }
+}
